@@ -5,16 +5,18 @@ const promptInput = promptForm.querySelector(".prompt-input");
 const fileInput = promptForm.querySelector("#file-input");
 const fileUploadWrapper = promptForm.querySelector(".file-upload-wrapper");
 
+// Enforce dark theme
 document.body.classList.remove("light-theme");
 localStorage.setItem("themeColor", "dark_mode");
 
+// API keys pool
 const API_KEYS = [
   "AIzaSyDPiBB6pS4P6aNDNYx-QTSvoDW1oP94Ld4",
-  "AIzaSyB6uwGq7g-test-test-key1",
-  "AIzaSyD-test-test-test-key2"
+  "AIzaSyClK-vUfW2Qe-K1IdcZjJGPvRJys-ZcAEo",
+  "AIzaSyARmC8y2KIoS8IDvTFXYD2nDoYlMdA3G_c",
 ];
-const API_URL = (key) =>
-  `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
+const getRandomKey = () => API_KEYS[Math.floor(Math.random() * API_KEYS.length)];
+const API_URL = (key) => `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
 
 const CREATOR_INFO = {
   name: "Samartha GS",
@@ -23,12 +25,10 @@ const CREATOR_INFO = {
   botName: "OPS",
   botfullName: "Over Powered Sam",
   creatorBio:
-    "Samartha GS is a talented web developer and AI enthusiast who specializes in creating innovative web applications and AI-powered solutions. You can explore his work and projects at samarthags.in",
+    "Samartha GS is a talented web developer and AI enthusiast who specializes in creating innovative web applications and AI-powered solutions. He's passionate about technology and builds cutting-edge projects that push the boundaries of what's possible on the web. You can explore his work and projects at samarthags.in",
 };
 
 let controller, typingInterval;
-let messageCount = 0;
-const MESSAGE_LIMIT = 5;
 
 const chatHistory = [
   {
@@ -46,6 +46,21 @@ const userData = {
   file: {},
 };
 
+// Limit Logic
+const DAILY_LIMIT = 5;
+const LIMIT_KEY = "ops_daily_limit";
+const DATE_KEY = "ops_limit_date";
+const today = new Date().toLocaleDateString();
+if (localStorage.getItem(DATE_KEY) !== today) {
+  localStorage.setItem(DATE_KEY, today);
+  localStorage.setItem(LIMIT_KEY, "0");
+}
+const hasReachedLimit = () => parseInt(localStorage.getItem(LIMIT_KEY) || "0", 10) >= DAILY_LIMIT;
+const incrementLimit = () => {
+  const current = parseInt(localStorage.getItem(LIMIT_KEY) || "0", 10);
+  localStorage.setItem(LIMIT_KEY, (current + 1).toString());
+};
+
 const createMessageElement = (content, ...classes) => {
   const div = document.createElement("div");
   div.classList.add("message", ...classes);
@@ -60,9 +75,9 @@ const isAskingAboutSamartha = (message) => {
 
 const getSamarthaResponse = () => {
   const replies = [
-    `Samartha GS is my creator - a passionate web developer and AI enthusiast. Check his projects at samarthags.in.`,
-    `Samartha GS is a talented developer in web & AI. He created me (OPS)! Visit samarthags.in to see more.`,
-    `I was built by Samartha GS — an amazing developer! Explore his work at samarthags.in.`,
+    `Samartha Gs is my creator - a passionate web developer and AI enthusiast. You can check his projects at samarthags.in.`,
+    `Samartha GS is a talented developer specializing in web and AI. He created me (OPS)! See his work at samarthags.in.`,
+    `I was built by Samartha GS — an amazing web developer and AI builder! Visit samarthags.in for more.`,
   ];
   return replies[Math.floor(Math.random() * replies.length)];
 };
@@ -89,13 +104,6 @@ const generateResponse = async (botMsgDiv) => {
   const textElement = botMsgDiv.querySelector(".message-text");
   controller = new AbortController();
 
-  // Show limit message after 5th user message
-  if (messageCount > MESSAGE_LIMIT) {
-    const limitMsg = `There are limits to patience 😅 Your today's free limit ends. Come back tomorrow or explore premium @samarthags.in</a>.`;
-    typingEffect(limitMsg, textElement, botMsgDiv);
-    return;
-  }
-
   if (isAskingAboutSamartha(userData.message)) {
     const samarthaResponse = getSamarthaResponse();
     typingEffect(samarthaResponse, textElement, botMsgDiv);
@@ -103,6 +111,16 @@ const generateResponse = async (botMsgDiv) => {
     chatHistory.push({ role: "model", parts: [{ text: samarthaResponse }] });
     return;
   }
+
+  if (hasReachedLimit()) {
+    const limitResponse = `There are limits to patience . Your today's free limit ends today.Come back tomorrow or explore premium @samarthags.in`;
+    typingEffect(limitResponse, textElement, botMsgDiv);
+    chatHistory.push({ role: "user", parts: [{ text: userData.message }] });
+    chatHistory.push({ role: "model", parts: [{ text: limitResponse }] });
+    return;
+  }
+
+  incrementLimit();
 
   const parts = [
     {
@@ -117,8 +135,7 @@ const generateResponse = async (botMsgDiv) => {
   chatHistory.push({ role: "user", parts });
 
   try {
-    const apiKey = API_KEYS[Math.floor(Math.random() * API_KEYS.length)];
-    const res = await fetch(API_URL(apiKey), {
+    const res = await fetch(API_URL(getRandomKey()), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -186,8 +203,6 @@ const handleFormSubmit = (e) => {
     scrollToBottom();
     generateResponse(botMsgDiv);
   }, 600);
-
-  messageCount++;
 };
 
 fileInput.addEventListener("change", () => {
