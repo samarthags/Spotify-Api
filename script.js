@@ -113,7 +113,7 @@ const generateResponse = async (botMsgDiv) => {
   }
 
   if (hasReachedLimit()) {
-    const limitResponse = `There are limits to patience . Your today's free limit ends today.Come back tomorrow or explore premium @samarthags.in`;
+    const limitResponse = `There are limits to patience ! Your today's free limit ends. Come back tomorrow or explore premium @samarthags.in`;
     typingEffect(limitResponse, textElement, botMsgDiv);
     chatHistory.push({ role: "user", parts: [{ text: userData.message }] });
     chatHistory.push({ role: "model", parts: [{ text: limitResponse }] });
@@ -197,7 +197,7 @@ const handleFormSubmit = (e) => {
   scrollToBottom();
 
   setTimeout(() => {
-    const botHTML = `<img class="avatar" src="gemini.svg" /> <p class="message-text">OPS is thinking...</p>`;
+    const botHTML = `<img class="avatar" src="https://i.ibb.co/4ZcSXDLK/file-0000000023f861f9981899d1170a541f.png" /> <p class="message-text">OPS is thinking...</p>`;
     const botMsgDiv = createMessageElement(botHTML, "bot-message", "loading");
     chatsContainer.appendChild(botMsgDiv);
     scrollToBottom();
