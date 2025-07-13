@@ -9,9 +9,7 @@ const fileUploadWrapper = promptForm.querySelector(".file-upload-wrapper");
 document.body.classList.remove("light-theme");
 localStorage.setItem("themeColor", "dark_mode");
 
-// API keys pool
-const API_KEYS = [
- // API keys pool
+
 const API_KEYS = [
   "AIzaSyBwtb3i2Avw3NL5vS4oNqB3im98AqB4h8s",
   "AIzaSyAo6vdXNaiUEr4ebry6nBYAjPkxF5HiC18",
@@ -22,7 +20,6 @@ const API_KEYS = [
   "AIzaSyAvLLuaKFk1-U6yZBiGzWbcOOBH0rJvxfA",
   "AIzaSyBtOP_l0VsTAxRV_tPJvnc7rUBEdKNDJ_g",
   "AIzaSyDPiBB6pS4P6aNDNYx-QTSvoDW1oP94Ld4"
-,
 ];
 const getRandomKey = () => API_KEYS[Math.floor(Math.random() * API_KEYS.length)];
 const API_URL = (key) => `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
