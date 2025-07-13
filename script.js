@@ -4,69 +4,36 @@ const promptForm = document.querySelector(".prompt-form");
 const promptInput = promptForm.querySelector(".prompt-input");
 const fileInput = promptForm.querySelector("#file-input");
 const fileUploadWrapper = promptForm.querySelector(".file-upload-wrapper");
+const themeToggleBtn = document.querySelector("#theme-toggle-btn");
 
-// Enforce dark theme
-document.body.classList.remove("light-theme");
-localStorage.setItem("themeColor", "dark_mode");
+// API Setup
+const API_KEY = "PASTE-YOUR-API-KEY";
+const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
 
-
-const API_KEYS = [
-  "AIzaSyBwtb3i2Avw3NL5vS4oNqB3im98AqB4h8s",
-  "AIzaSyAo6vdXNaiUEr4ebry6nBYAjPkxF5HiC18",
-  "AIzaSyABjyHBxmOpX9LjfKgKB_nBn_DxrJxL0bE",
-  "AIzaSyDrIdlXsKdqGBdk5lh2FXAJ_gdjkUxkPXQ",
-  "AIzaSyDim3VKQBoOGhVS7tmQysosFR7gdTXFHZw",
-  "AIzaSyAL-uu_Ow_cWsW2FvTAd5071hBfB8StOas",
-  "AIzaSyAvLLuaKFk1-U6yZBiGzWbcOOBH0rJvxfA",
-  "AIzaSyBtOP_l0VsTAxRV_tPJvnc7rUBEdKNDJ_g",
-  "AIzaSyDPiBB6pS4P6aNDNYx-QTSvoDW1oP94Ld4"
-];
-const getRandomKey = () => API_KEYS[Math.floor(Math.random() * API_KEYS.length)];
-const API_URL = (key) => `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
-
+// Creator Information
 const CREATOR_INFO = {
   name: "Samartha GS",
-  website: "https://samarthags.in",
-  signature: "Over-Powered-Sam AI by Samartha GS",
-  botName: "OPS",
-  botfullName: "Over Powered Sam",
-  creatorBio:
-    "Samartha GS is a talented web developer and AI enthusiast who specializes in creating innovative web applications and AI-powered solutions. He's passionate about technology and builds cutting-edge projects that push the boundaries of what's possible on the web. You can explore his work and projects at samarthags.in",
+  website: "samarthags.in",
+  botName: "Samartha AI",
+  description: "AI Assistant created by Samartha GS - A passionate web developer and AI enthusiast",
+  greeting: "Hello! I'm Samartha AI, created by Samartha GS - a skilled web developer and AI enthusiast who specializes in creating innovative web applications and AI-powered solutions. You can learn more about my creator and his amazing projects at samarthags.in. How can I assist you today?"
 };
 
 let controller, typingInterval;
-
 const chatHistory = [
   {
     role: "model",
-    parts: [
-      {
-        text: `Hello! I'm OPS, created by Samartha GS - a skilled web developer and AI enthusiast. You can learn more about my creator at samarthags.in. I'm here to help you with any questions or tasks you might have. How can I assist you today?`,
-      },
-    ],
+    parts: [{ text: CREATOR_INFO.greeting }],
   },
 ];
+const userData = { message: "", file: {} };
 
-const userData = {
-  message: "",
-  file: {},
-};
+// Set initial theme from local storage
+const isLightTheme = localStorage.getItem("themeColor") === "light_mode";
+document.body.classList.toggle("light-theme", isLightTheme);
+themeToggleBtn.textContent = isLightTheme ? "dark_mode" : "light_mode";
 
-// Limit Logic
-const DAILY_LIMIT = 5;
-const LIMIT_KEY = "ops_daily_limit";
-const DATE_KEY = "ops_limit_date";
-const today = new Date().toLocaleDateString();
-if (localStorage.getItem(DATE_KEY) !== today) {
-  localStorage.setItem(DATE_KEY, today);
-  localStorage.setItem(LIMIT_KEY, "0");
-}
-const hasReachedLimit = () => parseInt(localStorage.getItem(LIMIT_KEY) || "0", 10) >= DAILY_LIMIT;
-const incrementLimit = () => {
-  const current = parseInt(localStorage.getItem(LIMIT_KEY) || "0", 10);
-  localStorage.setItem(LIMIT_KEY, (current + 1).toString());
-};
-
+// Function to create message elements
 const createMessageElement = (content, ...classes) => {
   const div = document.createElement("div");
   div.classList.add("message", ...classes);
@@ -74,103 +41,114 @@ const createMessageElement = (content, ...classes) => {
   return div;
 };
 
-const isAskingAboutSamartha = (message) => {
-  const keywords = ["samartha", "creator", "developer", "who made", "who built", "who created", "who is"];
-  return keywords.some((word) => message.toLowerCase().includes(word));
-};
-
-const getSamarthaResponse = () => {
-  const replies = [
-    `Samartha Gs is my creator - a passionate web developer and AI enthusiast. You can check his projects at samarthags.in.`,
-    `Samartha GS is a talented developer specializing in web and AI. He created me (OPS)! See his work at samarthags.in.`,
-    `I was built by Samartha GS — an amazing web developer and AI builder! Visit samarthags.in for more.`,
+// Check if user is asking about creator or AI identity
+const isAskingAboutCreator = (message) => {
+  const keywords = [
+    'samartha', 'creator', 'developer', 'who made', 'who created', 'who built', 
+    'who are you', 'about you', 'your creator', 'who is your', 'made by',
+    'developed by', 'built by', 'samarthags'
   ];
-  return replies[Math.floor(Math.random() * replies.length)];
+  return keywords.some(keyword => message.toLowerCase().includes(keyword));
 };
 
+// Generate creator/identity response
+const getCreatorResponse = () => {
+  const responses = [
+    `I'm Samartha AI, created by Samartha GS - a passionate web developer and AI enthusiast. Samartha specializes in building innovative web applications and AI-powered solutions using modern technologies. He's skilled in creating cutting-edge projects that push the boundaries of what's possible on the web. You can explore his incredible work and projects at samarthags.in where you'll find his portfolio showcasing various web development and AI projects.`,
+    
+    `I'm an AI assistant created by Samartha GS, who is a talented web developer and AI enthusiast. Samartha has expertise in modern web technologies and loves creating innovative digital experiences. He builds amazing projects that combine creativity with technical excellence, specializing in AI-powered applications and interactive web solutions. Check out his work at samarthags.in to see the impressive projects he's developed!`,
+    
+    `My creator is Samartha GS - a skilled web developer and AI enthusiast who's passionate about technology and innovation. He specializes in creating AI-powered web applications and cutting-edge digital solutions. Samartha loves pushing the boundaries of what's possible with web technologies and AI integration. Visit samarthags.in to see his portfolio and the amazing projects he's working on!`
+  ];
+  
+  return responses[Math.floor(Math.random() * responses.length)];
+};
+
+// Scroll to the bottom of the container
 const scrollToBottom = () => container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
 
+// Simulate typing effect for bot responses
 const typingEffect = (text, textElement, botMsgDiv) => {
   textElement.textContent = "";
   const words = text.split(" ");
-  let i = 0;
+  let wordIndex = 0;
+
+  // Set an interval to type each word
   typingInterval = setInterval(() => {
-    if (i < words.length) {
-      textElement.textContent += (i === 0 ? "" : " ") + words[i++];
+    if (wordIndex < words.length) {
+      textElement.textContent += (wordIndex === 0 ? "" : " ") + words[wordIndex++];
       scrollToBottom();
     } else {
       clearInterval(typingInterval);
       botMsgDiv.classList.remove("loading");
       document.body.classList.remove("bot-responding");
     }
-  }, 40);
+  }, 40); // 40 ms delay
 };
 
+// Make the API call and generate the bot's response
 const generateResponse = async (botMsgDiv) => {
   const textElement = botMsgDiv.querySelector(".message-text");
   controller = new AbortController();
 
-  if (isAskingAboutSamartha(userData.message)) {
-    const samarthaResponse = getSamarthaResponse();
-    typingEffect(samarthaResponse, textElement, botMsgDiv);
-    chatHistory.push({ role: "user", parts: [{ text: userData.message }] });
-    chatHistory.push({ role: "model", parts: [{ text: samarthaResponse }] });
+  // Check if user is asking about creator or AI identity
+  if (isAskingAboutCreator(userData.message)) {
+    const creatorResponse = getCreatorResponse();
+    typingEffect(creatorResponse, textElement, botMsgDiv);
+    
+    // Add to chat history
+    chatHistory.push({
+      role: "user",
+      parts: [{ text: userData.message }],
+    });
+    chatHistory.push({
+      role: "model",
+      parts: [{ text: creatorResponse }],
+    });
     return;
   }
 
-  if (hasReachedLimit()) {
-    const limitResponse = `There are limits to patience ! Your today's free limit ends. Come back tomorrow or explore premium @samarthags.in`;
-    typingEffect(limitResponse, textElement, botMsgDiv);
-    chatHistory.push({ role: "user", parts: [{ text: userData.message }] });
-    chatHistory.push({ role: "model", parts: [{ text: limitResponse }] });
-    return;
-  }
-
-  incrementLimit();
-
-  const parts = [
-    {
-      text: `You are OverPowered AI, created by Samartha GS (web developer & AI enthusiast - samarthags.in). Respond as OverPowered AI. User asked: ${userData.message}`,
-    },
-  ];
-  if (userData.file.data) {
-    const { fileName, isImage, ...inlineData } = userData.file;
-    parts.push({ inline_data: inlineData });
-  }
-
-  chatHistory.push({ role: "user", parts });
+  // Add user message and file data to the chat history with creator context
+  chatHistory.push({
+    role: "user",
+    parts: [{ 
+      text: `I am Samartha AI, created by Samartha GS (web developer and AI enthusiast - website: samarthags.in). Always remember my identity as Samartha AI and mention my creator when relevant. User query: ${userData.message}` 
+    }, ...(userData.file.data ? [{ inline_data: (({ fileName, isImage, ...rest }) => rest)(userData.file) }] : [])],
+  });
 
   try {
-    const res = await fetch(API_URL(getRandomKey()), {
+    // Send the chat history to the API to get a response
+    const response = await fetch(API_URL, {
       method: "POST",
-      headers: {
+      headers: { 
         "Content-Type": "application/json",
         "X-Creator": "SamarthaGS",
-        "X-Bot-Name": "OverPoweredSamAI",
-        Referer: CREATOR_INFO.website,
+        "X-Bot-Name": "SamarthaAI"
       },
       body: JSON.stringify({ contents: chatHistory }),
       signal: controller.signal,
     });
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error?.message || "Failed to fetch");
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error.message);
 
-    const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text
-      ?.replace(/\*\*([^*]+)\*\*/g, "$1")
-      .trim();
-
+    // Process the response text and display with typing effect
+    const responseText = data.candidates[0].content.parts[0].text.replace(/\*\*([^*]+)\*\*/g, "$1").trim();
     typingEffect(responseText, textElement, botMsgDiv);
+
     chatHistory.push({ role: "model", parts: [{ text: responseText }] });
   } catch (error) {
-    const errorMsg =
-      error.name === "AbortError"
-        ? "Response stopped."
-        : error.message.includes("fetch")
-        ? "Connection error. Please check your internet."
-        : error.message;
-
-    textElement.textContent = errorMsg;
+    let errorMessage = "Something went wrong. Please try again.";
+    
+    if (error.name === "AbortError") {
+      errorMessage = "Response generation stopped.";
+    } else if (error.message.includes("fetch")) {
+      errorMessage = "Connection error. Please check your internet connection.";
+    } else {
+      errorMessage = error.message;
+    }
+    
+    textElement.textContent = errorMessage;
     textElement.style.color = "#d62939";
     botMsgDiv.classList.remove("loading");
     document.body.classList.remove("bot-responding");
@@ -180,37 +158,39 @@ const generateResponse = async (botMsgDiv) => {
   }
 };
 
+// Handle the form submission
 const handleFormSubmit = (e) => {
   e.preventDefault();
-  const msg = promptInput.value.trim();
-  if (!msg || document.body.classList.contains("bot-responding")) return;
+  const userMessage = promptInput.value.trim();
+  if (!userMessage || document.body.classList.contains("bot-responding")) return;
 
-  userData.message = msg;
+  userData.message = userMessage;
   promptInput.value = "";
   document.body.classList.add("chats-active", "bot-responding");
   fileUploadWrapper.classList.remove("file-attached", "img-attached", "active");
 
-  const fileHTML = userData.file.data
-    ? userData.file.isImage
-      ? `<img src="data:${userData.file.mime_type};base64,${userData.file.data}" class="img-attachment" />`
-      : `<p class="file-attachment"><span class="material-symbols-rounded">description</span>${userData.file.fileName}</p>`
-    : "";
+  // Generate user message HTML with optional file attachment
+  const userMsgHTML = `
+    <p class="message-text"></p>
+    ${userData.file.data ? (userData.file.isImage ? `<img src="data:${userData.file.mime_type};base64,${userData.file.data}" class="img-attachment" />` : `<p class="file-attachment"><span class="material-symbols-rounded">description</span>${userData.file.fileName}</p>`) : ""}
+  `;
 
-  const userHTML = `<p class="message-text"></p>${fileHTML}`;
-  const userMsgDiv = createMessageElement(userHTML, "user-message");
+  const userMsgDiv = createMessageElement(userMsgHTML, "user-message");
   userMsgDiv.querySelector(".message-text").textContent = userData.message;
   chatsContainer.appendChild(userMsgDiv);
   scrollToBottom();
 
   setTimeout(() => {
-    const botHTML = `<img class="avatar" src="https://i.ibb.co/4ZcSXDLK/file-0000000023f861f9981899d1170a541f.png" /> <p class="message-text">OPS is thinking...</p>`;
-    const botMsgDiv = createMessageElement(botHTML, "bot-message", "loading");
+    // Generate bot message HTML and add in the chat container
+    const botMsgHTML = `<img class="avatar" src="gemini.svg" /> <p class="message-text">Samartha AI is thinking...</p>`;
+    const botMsgDiv = createMessageElement(botMsgHTML, "bot-message", "loading");
     chatsContainer.appendChild(botMsgDiv);
     scrollToBottom();
     generateResponse(botMsgDiv);
-  }, 600);
+  }, 600); // 600 ms delay
 };
 
+// Handle file input change (file upload)
 fileInput.addEventListener("change", () => {
   const file = fileInput.files[0];
   if (!file) return;
@@ -218,50 +198,62 @@ fileInput.addEventListener("change", () => {
   const isImage = file.type.startsWith("image/");
   const reader = new FileReader();
   reader.readAsDataURL(file);
+
   reader.onload = (e) => {
     fileInput.value = "";
-    const base64 = e.target.result.split(",")[1];
+    const base64String = e.target.result.split(",")[1];
     fileUploadWrapper.querySelector(".file-preview").src = e.target.result;
     fileUploadWrapper.classList.add("active", isImage ? "img-attached" : "file-attached");
 
-    userData.file = {
-      fileName: file.name,
-      data: base64,
-      mime_type: file.type,
-      isImage,
-    };
+    // Store file data in userData obj
+    userData.file = { fileName: file.name, data: base64String, mime_type: file.type, isImage };
   };
 });
 
+// Cancel file upload
 document.querySelector("#cancel-file-btn").addEventListener("click", () => {
   userData.file = {};
   fileUploadWrapper.classList.remove("file-attached", "img-attached", "active");
 });
 
+// Stop Bot Response
 document.querySelector("#stop-response-btn").addEventListener("click", () => {
   controller?.abort();
   userData.file = {};
   clearInterval(typingInterval);
-  const loading = chatsContainer.querySelector(".bot-message.loading");
-  if (loading) loading.classList.remove("loading");
+  chatsContainer.querySelector(".bot-message.loading").classList.remove("loading");
   document.body.classList.remove("bot-responding");
 });
 
-document.querySelectorAll(".suggestions-item").forEach((item) => {
-  item.addEventListener("click", () => {
-    promptInput.value = item.querySelector(".text").textContent;
+// Toggle dark/light theme
+themeToggleBtn.addEventListener("click", () => {
+  const isLightTheme = document.body.classList.toggle("light-theme");
+  localStorage.setItem("themeColor", isLightTheme ? "light_mode" : "dark_mode");
+  themeToggleBtn.textContent = isLightTheme ? "dark_mode" : "light_mode";
+});
+
+// Delete all chats
+document.querySelector("#delete-chats-btn").addEventListener("click", () => {
+  chatHistory.length = 1; // Keep the initial greeting message
+  chatsContainer.innerHTML = "";
+  document.body.classList.remove("chats-active", "bot-responding");
+});
+
+// Handle suggestions click
+document.querySelectorAll(".suggestions-item").forEach((suggestion) => {
+  suggestion.addEventListener("click", () => {
+    promptInput.value = suggestion.querySelector(".text").textContent;
     promptForm.dispatchEvent(new Event("submit"));
   });
 });
 
+// Show/hide controls for mobile on prompt input focus
 document.addEventListener("click", ({ target }) => {
   const wrapper = document.querySelector(".prompt-wrapper");
-  const hide =
-    target.classList.contains("prompt-input") ||
-    (wrapper.classList.contains("hide-controls") &&
-      (target.id === "add-file-btn" || target.id === "stop-response-btn"));
-  wrapper.classList.toggle("hide-controls", hide);
+  const shouldHide = target.classList.contains("prompt-input") || (wrapper.classList.contains("hide-controls") && (target.id === "add-file-btn" || target.id === "stop-response-btn"));
+  wrapper.classList.toggle("hide-controls", shouldHide);
 });
 
+// Add event listeners for form submission and file input click
 promptForm.addEventListener("submit", handleFormSubmit);
 promptForm.querySelector("#add-file-btn").addEventListener("click", () => fileInput.click());
