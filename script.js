@@ -11,9 +11,17 @@ localStorage.setItem("themeColor", "dark_mode");
 
 // API keys pool
 const API_KEYS = [
-  "AIzaSyDPiBB6pS4P6aNDNYx-QTSvoDW1oP94Ld4",
-  "AIzaSyClK-vUfW2Qe-K1IdcZjJGPvRJys-ZcAEo",
-  "AIzaSyARmC8y2KIoS8IDvTFXYD2nDoYlMdA3G_c",
+ // API keys pool
+const API_KEYS = [
+  "AIzaSyBwtb3i2Avw3NL5vS4oNqB3im98AqB4h8s",
+  "AIzaSyAo6vdXNaiUEr4ebry6nBYAjPkxF5HiC18",
+  "AIzaSyABjyHBxmOpX9LjfKgKB_nBn_DxrJxL0bE",
+  "AIzaSyDrIdlXsKdqGBdk5lh2FXAJ_gdjkUxkPXQ",
+  "AIzaSyDim3VKQBoOGhVS7tmQysosFR7gdTXFHZw",
+  "AIzaSyAL-uu_Ow_cWsW2FvTAd5071hBfB8StOas",
+  "AIzaSyAvLLuaKFk1-U6yZBiGzWbcOOBH0rJvxfA",
+  "AIzaSyBtOP_l0VsTAxRV_tPJvnc7rUBEdKNDJ_g",
+  "AIzaSyDPiBB6pS4P6aNDNYx-QTSvoDW1oP94Ld4"
 ];
 const getRandomKey = () => API_KEYS[Math.floor(Math.random() * API_KEYS.length)];
 const API_URL = (key) => `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
