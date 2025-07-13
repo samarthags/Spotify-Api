@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Welcome Page</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-size: cover;
+      background-position: center;
+      transition: background-image 1s ease-in-out;
+    }
+    .container {
+      background: rgba(255, 255, 255, 0.85);
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      text-align: center;
+      max-width: 90%;
+    }
+    input {
+      padding: 10px;
+      width: 200px;
+      font-size: 16px;
+      margin-top: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 25px;
+      font-size: 16px;
+      border: none;
+      background-color: #4CAF50;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container" id="welcomeContainer">
+    <h2>Welcome!</h2>
+    <p>Please enter your name:</p>
+    <input type="text" id="nameInput" placeholder="Your name" />
+    <br />
+    <button onclick="saveName()">Continue</button>
+  </div>
+
+  <script>
+    function saveName() {
+      const name = document.getElementById('nameInput').value.trim();
+      if (name) {
+        localStorage.setItem('userName', name);
+        setBackgroundWithName(name);
+        document.getElementById('welcomeContainer').innerHTML = `
+          <h2>Hello, ${name}!</h2>
+          <p>Enjoy your personalized welcome.</p>
+        `;
+      } else {
+        alert("Please enter your name.");
+      }
+    }
+
+    function setBackgroundWithName(name) {
+      // Change this URL logic to your own API if desired
+      const backgroundUrl = `https://source.unsplash.com/1600x900/?abstract,${encodeURIComponent(name)}`;
+      document.body.style.backgroundImage = `url('${backgroundUrl}')`;
+    }
+
+    window.onload = () => {
+      const savedName = localStorage.getItem('userName');
+      if (savedName) {
+        setBackgroundWithName(savedName);
+        document.getElementById('welcomeContainer').innerHTML = `
+          <h2>Welcome back, ${savedName}!</h2>
+          <p>Glad to see you again.</p>
+        `;
+      }
+    };
+  </script>
+
+</body>
+</html>
