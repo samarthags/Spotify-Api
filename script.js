@@ -22,6 +22,7 @@ const API_KEYS = [
   "AIzaSyAvLLuaKFk1-U6yZBiGzWbcOOBH0rJvxfA",
   "AIzaSyBtOP_l0VsTAxRV_tPJvnc7rUBEdKNDJ_g",
   "AIzaSyDPiBB6pS4P6aNDNYx-QTSvoDW1oP94Ld4"
+,
 ];
 const getRandomKey = () => API_KEYS[Math.floor(Math.random() * API_KEYS.length)];
 const API_URL = (key) => `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
