@@ -1,36 +1,53 @@
-document.getElementById("login").addEventListener("click", () => {
-  window.location.href = "/api/login";
-});
+// Get access token from URL fragment
+const hash = window.location.hash;
+const token = new URLSearchParams(hash.substring(1)).get("access_token");
 
-window.onload = async () => {
-  const hash = window.location.hash;
-  if (hash.includes("access_token")) {
-    document.getElementById("login").style.display = "none";
-    document.getElementById("results").style.display = "block";
+if (!token) {
+  console.error("No access token found in URL");
+} else {
+  console.log("Access Token:", token);
+  fetchTopTracks(token);
+  fetchCurrentlyPlaying(token);
+}
 
-    const token = hash.split("=")[1];
+function fetchTopTracks(token) {
+  fetch(`/api/top-tracks?access_token=${token}`)
+    .then((res) => res.json())
+    .then((data) => {
+      const list = document.createElement("ul");
+      const container = document.querySelector("h2:nth-of-type(1)");
+      container.after(list);
 
-    const topTracksRes = await fetch("/api/top-tracks", {
-      headers: { Authorization: token }
+      if (Array.isArray(data)) {
+        data.forEach((track) => {
+          const li = document.createElement("li");
+          li.textContent = `${track.name} by ${track.artist}`;
+          list.appendChild(li);
+        });
+      } else {
+        list.textContent = "Failed to load top tracks.";
+      }
+    })
+    .catch((err) => {
+      console.error("Top tracks error:", err);
     });
-    const topTracks = await topTracksRes.json();
+}
 
-    const list = document.getElementById("top-tracks");
-    topTracks.items.forEach((track) => {
-      const li = document.createElement("li");
-      li.textContent = `${track.name} by ${track.artists[0].name}`;
-      list.appendChild(li);
-    });
+function fetchCurrentlyPlaying(token) {
+  fetch(`/api/currently-playing?access_token=${token}`)
+    .then((res) => res.json())
+    .then((data) => {
+      const container = document.querySelector("h2:nth-of-type(2)");
+      const p = document.createElement("p");
+      container.after(p);
 
-    const nowPlayingRes = await fetch("/api/currently-playing", {
-      headers: { Authorization: token }
+      if (data && data.name) {
+        p.textContent = `${data.name} by ${data.artist}`;
+      } else {
+        p.textContent = "Nothing currently playing.";
+      }
+    })
+    .catch((err) => {
+      console.error("Currently playing error:", err);
     });
-    const nowPlaying = await nowPlayingRes.json();
-    if (nowPlaying && nowPlaying.item) {
-      document.getElementById("now-playing").textContent =
-        `${nowPlaying.item.name} by ${nowPlaying.item.artists[0].name}`;
-    } else {
-      document.getElementById("now-playing").textContent = "Nothing playing right now.";
-    }
-  }
-};
+}
