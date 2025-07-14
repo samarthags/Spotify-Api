@@ -7,7 +7,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Check for access_token in URL (after redirect from Spotify)
   const hash = window.location.hash;
   const token = new URLSearchParams(hash.substring(1)).get("access_token");
 
@@ -48,10 +47,10 @@ function fetchCurrentlyPlaying(token) {
       const p = document.createElement("p");
       h2.after(p);
 
-      if (data && data.name) {
-        p.textContent = `${data.name} by ${data.artist}`;
+      if (data && data.name && data.artist) {
+        p.textContent = `🎧 Now playing: ${data.name} by ${data.artist}`;
       } else {
-        p.textContent = "Nothing currently playing.";
+        p.textContent = "Nothing is currently playing.";
       }
     })
     .catch((err) => {
