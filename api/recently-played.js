@@ -21,7 +21,7 @@ module.exports = async (req, res) => {
 
     const totalMinutes = Math.round(totalMs / 1000 / 60);
 
-    res.status(200).json({ totalMinutes });
+    res.status(200).json({ totalMinutes }); // ✅ Must be here
   } catch (err) {
     console.error("Recently played error:", err.response?.data || err.message);
     res.status(500).json({ error: "Failed to fetch recently played tracks" });
