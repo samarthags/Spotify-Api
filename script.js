@@ -1,22 +1,29 @@
-// Get access token from URL fragment
-const hash = window.location.hash;
-const token = new URLSearchParams(hash.substring(1)).get("access_token");
+document.addEventListener("DOMContentLoaded", () => {
+  const loginBtn = document.getElementById("login-btn");
 
-if (!token) {
-  console.error("No access token found in URL");
-} else {
-  console.log("Access Token:", token);
-  fetchTopTracks(token);
-  fetchCurrentlyPlaying(token);
-}
+  if (loginBtn) {
+    loginBtn.addEventListener("click", () => {
+      window.location.href = "/api/login";
+    });
+  }
+
+  // Check for access_token in URL (after redirect from Spotify)
+  const hash = window.location.hash;
+  const token = new URLSearchParams(hash.substring(1)).get("access_token");
+
+  if (token) {
+    fetchTopTracks(token);
+    fetchCurrentlyPlaying(token);
+  }
+});
 
 function fetchTopTracks(token) {
   fetch(`/api/top-tracks?access_token=${token}`)
     .then((res) => res.json())
     .then((data) => {
+      const h2 = document.querySelector("h2:nth-of-type(1)");
       const list = document.createElement("ul");
-      const container = document.querySelector("h2:nth-of-type(1)");
-      container.after(list);
+      h2.after(list);
 
       if (Array.isArray(data)) {
         data.forEach((track) => {
@@ -25,7 +32,7 @@ function fetchTopTracks(token) {
           list.appendChild(li);
         });
       } else {
-        list.textContent = "Failed to load top tracks.";
+        list.textContent = "Could not load top tracks.";
       }
     })
     .catch((err) => {
@@ -37,9 +44,9 @@ function fetchCurrentlyPlaying(token) {
   fetch(`/api/currently-playing?access_token=${token}`)
     .then((res) => res.json())
     .then((data) => {
-      const container = document.querySelector("h2:nth-of-type(2)");
+      const h2 = document.querySelector("h2:nth-of-type(2)");
       const p = document.createElement("p");
-      container.after(p);
+      h2.after(p);
 
       if (data && data.name) {
         p.textContent = `${data.name} by ${data.artist}`;
