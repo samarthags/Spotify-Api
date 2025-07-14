@@ -2,20 +2,83 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Spotify Dashboard</title>
-  <link rel="stylesheet" href="styles.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Spotify Stats</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: linear-gradient(135deg, #1db954, #191414);
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    h1 {
+      margin-bottom: 1rem;
+      font-size: 2.5rem;
+    }
+
+    button {
+      background-color: #1db954;
+      color: white;
+      border: none;
+      padding: 0.75rem 2rem;
+      font-size: 1rem;
+      border-radius: 30px;
+      cursor: pointer;
+      margin-bottom: 2rem;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #17a74a;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    li {
+      margin: 0.5rem 0;
+    }
+
+    p {
+      margin-top: 0.5rem;
+      font-style: italic;
+    }
+
+    .section {
+      margin-top: 2rem;
+      width: 100%;
+      max-width: 600px;
+      text-align: left;
+      background-color: rgba(0, 0, 0, 0.3);
+      padding: 1rem;
+      border-radius: 12px;
+    }
+  </style>
 </head>
 <body>
-  <div id="app">
-    <h1>Spotify Stats</h1>
-    <button id="login">Login with Spotify</button>
-    <div id="results" style="display:none;">
-      <h2>Top 5 Songs</h2>
-      <ul id="top-tracks"></ul>
-      <h2>Currently Playing</h2>
-      <p id="now-playing"></p>
-    </div>
+  <h1>🎵 Your Spotify Stats</h1>
+
+  <button id="login-btn">Login with Spotify</button>
+
+  <div class="section">
+    <h2>Top 5 Songs</h2>
+    <!-- Songs will be inserted here by JS -->
   </div>
+
+  <div class="section">
+    <h2>Currently Playing</h2>
+    <!-- Currently playing will be inserted here by JS -->
+  </div>
+
   <script src="script.js"></script>
 </body>
 </html>
