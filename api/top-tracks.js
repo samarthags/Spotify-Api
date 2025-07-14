@@ -1,13 +1,23 @@
-import axios from "axios";
+const axios = require("axios");
 
-export default async function handler(req, res) {
-  const token = req.headers.authorization;
+module.exports = async (req, res) => {
+  const token = req.query.access_token;
+
   try {
-    const response = await axios.get("https://api.spotify.com/v1/me/top/tracks?limit=5", {
-      headers: { Authorization: `Bearer ${token}` }
+    const result = await axios.get("https://api.spotify.com/v1/me/top/tracks?limit=5", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     });
-    res.status(200).json(response.data);
+
+    const topTracks = result.data.items.map((track) => ({
+      name: track.name,
+      artist: track.artists[0].name,
+    }));
+
+    res.status(200).json(topTracks);
   } catch (err) {
-    res.status(401).json({ error: "Unauthorized" });
+    console.error("Top tracks API error:", err.response?.data || err.message);
+    res.status(500).json({ error: "Failed to fetch top tracks" });
   }
-}
+};
