@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Push Notifications</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+            transform: translateY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .container:hover {
+            transform: translateY(-5px);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: scale(1.02);
+        }
+
+        button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .status.success {
+            background: rgba(76, 175, 80, 0.1);
+            color: #4caf50;
+            border: 1px solid rgba(76, 175, 80, 0.3);
+        }
+
+        .status.error {
+            background: rgba(244, 67, 54, 0.1);
+            color: #f44336;
+            border: 1px solid rgba(244, 67, 54, 0.3);
+        }
+
+        .status.info {
+            background: rgba(33, 150, 243, 0.1);
+            color: #2196f3;
+            border: 1px solid rgba(33, 150, 243, 0.3);
+        }
+
+        .permission-note {
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            border-radius: 8px;
+            color: #ff9800;
+            font-size: 14px;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .notification-demo {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 10px;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+        }
+
+        .notification-demo h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .notification-demo p {
+            color: #555;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔔 Push Notifications</h1>
+        
+        <form id="nameForm">
+            <div class="form-group">
+                <label for="userName">Enter Your Name:</label>
+                <input type="text" id="userName" placeholder="Your name here..." required>
+            </div>
+            <button type="submit" id="submitBtn">
+                Send Notification
+            </button>
+        </form>
+
+        <div id="status" class="status" style="display: none;"></div>
+        
+        <div class="permission-note">
+            <strong>Note:</strong> You'll need to allow notifications when prompted by your browser.
+        </div>
+
+        <div class="notification-demo">
+            <h3>How it works:</h3>
+            <p>1. Enter your name<br>
+            2. Click "Send Notification"<br>
+            3. Allow notifications when prompted<br>
+            4. Receive multiple personalized greetings!<br>
+            5. No backend required - works entirely in browser!</p>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-app-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-messaging-compat.min.js"></script>
+
+    <script>
+        // Firebase configuration - Replace with your actual Firebase config
+        const firebaseConfig = {
+            apiKey: "your-api-key-here",
+            authDomain: "your-project.firebaseapp.com",
+            projectId: "your-project-id",
+            storageBucket: "your-project.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "your-app-id"
+        };
+
+        // Initialize Firebase (uncomment when you have Firebase config)
+        // firebase.initializeApp(firebaseConfig);
+        // const messaging = firebase.messaging();
+
+        // DOM elements
+        const nameForm = document.getElementById('nameForm');
+        const userNameInput = document.getElementById('userName');
+        const submitBtn = document.getElementById('submitBtn');
+        const statusDiv = document.getElementById('status');
+
+        // Show status message
+        function showStatus(message, type = 'info') {
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+            statusDiv.style.display = 'block';
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        // Request notification permission
+        async function requestNotificationPermission() {
+            if (!('Notification' in window)) {
+                throw new Error('This browser does not support notifications');
+            }
+
+            const permission = await Notification.requestPermission();
+            
+            if (permission !== 'granted') {
+                throw new Error('Notification permission denied');
+            }
+
+            return permission;
+        }
+
+        // Send browser notification (enhanced for multiple notifications)
+        function sendBrowserNotification(name, title = null, body = null) {
+            if (Notification.permission === 'granted') {
+                const notificationTitle = title || `Hello ${name}!`;
+                const notificationBody = body || `Welcome back, ${name}! Thanks for visiting our site.`;
+                
+                const notification = new Notification(notificationTitle, {
+                    body: notificationBody,
+                    icon: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMzIiIGN5PSIzMiIgcj0iMzIiIGZpbGw9IiM2NjdlZWEiLz4KPHBhdGggZD0iTTMyIDEyQzI2LjQ3NzIgMTIgMjIgMTYuNDc3MiAyMiAyMlYyOEMyMiAyOC43MzU2IDIyLjIxMDcgMjkuNDUxOSAyMi42MDU5IDMwLjA2MjVMMjguOTM5MyAzOS4zOTU4QzMwLjI5MzEgNDEuMjAyIDMzLjcwNjkgNDEuMjAyIDM1LjA2MDcgMzkuMzk1OEw0MS4zOTQxIDMwLjA2MjVDNDEuNzg5MyAyOS40NTE5IDQyIDI4LjczNTYgNDIgMjhWMjJDNDIgMTYuNDc3MiAzNy41MjI4IDEyIDMyIDEyWiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cg==',
+                    badge: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMzIiIGN5PSIzMiIgcj0iMzIiIGZpbGw9IiM2NjdlZWEiLz4KPC9zdmc+Cg==',
+                    tag: 'greeting-' + Date.now(),
+                    requireInteraction: false,
+                    silent: false
+                });
+
+                // Auto-close after 4 seconds
+                setTimeout(() => {
+                    notification.close();
+                }, 4000);
+
+                // Handle notification click
+                notification.onclick = function() {
+                    window.focus();
+                    notification.close();
+                };
+
+                return notification;
+            }
+        }
+
+        // Firebase Cloud Messaging setup (client-side only - no backend needed)
+        async function setupClientSideNotifications(name) {
+            // This function demonstrates how you could set up Firebase
+            // for client-side notifications without a backend
+            
+            // For now, we'll use browser notifications with timed sequences
+            const notifications = [
+                {
+                    delay: 0,
+                    title: `Hello ${name}!`,
+                    body: `Welcome back, ${name}! Thanks for visiting our site.`
+                },
+                {
+                    delay: 5000,
+                    title: `Hey ${name}!`,
+                    body: `Hope you're enjoying the experience! 🚀`
+                },
+                {
+                    delay: 10000,
+                    title: `Thanks ${name}!`,
+                    body: `You're awesome for trying this out! 🌟`
+                }
+            ];
+            
+            notifications.forEach(notification => {
+                setTimeout(() => {
+                    sendBrowserNotification(name, notification.title, notification.body);
+                }, notification.delay);
+            });
+        }
+
+        // Handle form submission
+        nameForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const name = userNameInput.value.trim();
+            if (!name) {
+                showStatus('Please enter your name', 'error');
+                return;
+            }
+
+            // Show loading state
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="loading"></span>Sending...';
+
+            try {
+                // Request notification permission
+                await requestNotificationPermission();
+                
+                // Use client-side notification system
+                await setupClientSideNotifications(name);
+                
+                showStatus(`Multiple notifications queued for ${name}! Check your notifications over the next 10 seconds.`, 'success');
+                
+                // Reset form
+                userNameInput.value = '';
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Send Notification';
+
+            } catch (error) {
+                console.error('Error sending notification:', error);
+                showStatus(`Error: ${error.message}`, 'error');
+                
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Send Notification';
+            }
+        });
+
+        // Check if notifications are supported
+        if (!('Notification' in window)) {
+            showStatus('This browser does not support notifications', 'error');
+            submitBtn.disabled = true;
+        }
+
+        // Show current notification permission status
+        if ('Notification' in window) {
+            const permission = Notification.permission;
+            if (permission === 'denied') {
+                showStatus('Notifications are blocked. Please enable them in your browser settings.', 'error');
+            } else if (permission === 'default') {
+                showStatus('Click the button to request notification permission', 'info');
+            }
+        }
+    </script>
+</body>
+</html>
