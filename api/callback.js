@@ -1,32 +1,36 @@
-import axios from "axios";
+const axios = require("axios");
 
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
   const code = req.query.code;
+  const client_id = process.env.SPOTIFY_CLIENT_ID;
+  const client_secret = process.env.SPOTIFY_CLIENT_SECRET;
+  const redirect_uri = process.env.REDIRECT_URI;
+
   const tokenURL = "https://accounts.spotify.com/api/token";
 
-  const body = new URLSearchParams({
-    grant_type: "authorization_code",
+  const params = new URLSearchParams({
     code,
-    redirect_uri: process.env.REDIRECT_URI
+    redirect_uri,
+    grant_type: "authorization_code",
   });
 
-  const basicAuth = Buffer.from(
-    `${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`
-  ).toString("base64");
+  const headers = {
+    Authorization: "Basic " + Buffer.from(client_id + ":" + client_secret).toString("base64"),
+    "Content-Type": "application/x-www-form-urlencoded",
+  };
 
   try {
-    const response = await axios.post(tokenURL, body.toString(), {
-      headers: {
-        Authorization: `Basic ${basicAuth}`,
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
+    const response = await axios.post(tokenURL, params.toString(), { headers });
+
+    const access_token = response.data.access_token;
+
+    // Redirect to frontend with access token
+    res.writeHead(302, {
+      Location: `/index.html#access_token=${access_token}`,
     });
-
-    const { access_token } = response.data;
-
-    // Redirect with access token in query
-    res.redirect(`/index.html#access_token=${access_token}`);
+    res.end();
   } catch (err) {
-    res.status(500).send("Error retrieving access token");
+    console.error("Error in /api/callback:", err.response?.data || err.message);
+    res.status(500).send("OAuth token exchange failed.");
   }
-}
+};
