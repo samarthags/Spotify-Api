@@ -13,6 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (token) {
     fetchTopTracks(token);
     fetchCurrentlyPlaying(token);
+    fetchListeningTime(token); // ✅ New Feature
   }
 });
 
@@ -55,5 +56,20 @@ function fetchCurrentlyPlaying(token) {
     })
     .catch((err) => {
       console.error("Currently playing error:", err);
+    });
+}
+
+function fetchListeningTime(token) {
+  fetch(`/api/recently-played?access_token=${token}`)
+    .then((res) => res.json())
+    .then((data) => {
+      const statBox = document.createElement("div");
+      statBox.className = "section";
+      statBox.innerHTML = `<h2>Listening Time</h2>
+        <p>You've listened to music for <strong>${data.totalMinutes} minutes</strong> recently 🎧</p>`;
+      document.body.appendChild(statBox);
+    })
+    .catch((err) => {
+      console.error("Listening time error:", err);
     });
 }
