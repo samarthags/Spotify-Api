@@ -1,49 +1,36 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Spotify Wrapped</title>
-  <link rel="stylesheet" href="styles.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spotify Wrapped Image Card</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <h1>🎧 Your Spotify Wrapped</h1>
-  <button id="login-btn">Login with Spotify</button>
-
-  <div id="profile" class="section"></div>
-
-  <div class="section" id="range-selector">
-    <button data-range="short_term">Last Week</button>
-    <button data-range="medium_term">Last Month</button>
-    <button data-range="long_term">Whole Year</button>
+  <div id="card" class="card">
+    <div class="profile-pic-container">
+      <img id="profile-pic" class="profile-pic" src="" alt="Profile Picture">
+    </div>
+    <div class="card-content">
+      <div class="branding">
+        <span class="spotify-logo">Spotify.Premium</span>
+        <span id="month-label" class="month"></span>
+      </div>
+      <h1>My <span id="month-name"></span> Sound Capsule</h1>
+      <div class="list-section">
+        <div>
+          <h2>Top artists</h2>
+          <ol id="top-artists"></ol>
+        </div>
+        <div>
+          <h2>Top songs</h2>
+          <ol id="top-songs"></ol>
+        </div>
+      </div>
+      <div class="time-listened">
+        <h3>Time listened</h3>
+        <span id="listening-time">...</span>
+      </div>
+    </div>
   </div>
-
-  <div id="top-songs" class="section">
-    <h2>Top 5 Songs</h2>
-    <div class="card-grid" id="songs-container"></div>
-  </div>
-
-  <div id="top-artists" class="section">
-    <h2>Top 5 Artists</h2>
-    <ul id="artists-list"></ul>
-  </div>
-
-  <div id="currently-playing" class="section">
-    <h2>Currently Playing</h2>
-    <p id="now-playing"></p>
-  </div>
-
-  <div id="genre-breakdown" class="section">
-    <h2>Genre Breakdown</h2>
-    <ul id="genres-list"></ul>
-  </div>
-
-  <div id="listening-time" class="section"></div>
-
-  <div class="section">
-    <button id="create-playlist-btn">Create Shareable Playlist</button>
-  </div>
-
-  <script src="script.js"></script>
-</body>
+  <button id="download-btn">Download</button>  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>  <script src="script.js"></script></body>
 </html>
