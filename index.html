@@ -1,761 +1,87 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spotify Stats Dashboard</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Spotify Stats</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: linear-gradient(135deg, #1db954, #191414);
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 2rem;
+    }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1db954 0%, #191414 50%, #1db954 100%);
-            color: #ffffff;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
+    h1 {
+      margin-bottom: 1rem;
+      font-size: 2.5rem;
+    }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
+    button {
+      background-color: #1db954;
+      color: white;
+      border: none;
+      padding: 0.75rem 2rem;
+      font-size: 1rem;
+      border-radius: 30px;
+      cursor: pointer;
+      margin-bottom: 2rem;
+      transition: background-color 0.3s ease;
+    }
 
-        /* Header Section */
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-            animation: fadeInDown 1s ease-out;
-        }
+    button:hover {
+      background-color: #17a74a;
+    }
 
-        .header h1 {
-            font-size: clamp(2rem, 5vw, 3.5rem);
-            background: linear-gradient(45deg, #1db954, #1ed760);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 10px;
-            text-shadow: 0 0 30px rgba(29, 185, 84, 0.5);
-        }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
 
-        .login-btn {
-            background: linear-gradient(45deg, #1db954, #1ed760);
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            font-size: 1.1rem;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(29, 185, 84, 0.4);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: bold;
-        }
+    li {
+      margin: 0.5rem 0;
+    }
 
-        .login-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(29, 185, 84, 0.6);
-        }
+    p {
+      margin-top: 0.5rem;
+      font-style: italic;
+    }
 
-        /* Profile Section */
-        .profile-section {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 40px;
-            animation: fadeInUp 1s ease-out 0.2s both;
-        }
-
-        .profile-card {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 30px;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            transition: transform 0.3s ease;
-        }
-
-        .profile-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .profile-pic {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            border: 4px solid #1db954;
-            margin-bottom: 20px;
-            object-fit: cover;
-            animation: pulse 2s infinite;
-        }
-
-        .profile-info h2 {
-            font-size: 1.8rem;
-            margin-bottom: 10px;
-            color: #1db954;
-        }
-
-        .profile-stats {
-            display: flex;
-            justify-content: space-around;
-            margin-top: 20px;
-            gap: 20px;
-        }
-
-        .stat-item {
-            text-align: center;
-        }
-
-        .stat-number {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #1db954;
-        }
-
-        .stat-label {
-            font-size: 0.9rem;
-            opacity: 0.8;
-        }
-
-        /* Grid Layout */
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 25px;
-            margin-top: 30px;
-        }
-
-        .card {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 25px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            transition: all 0.3s ease;
-            animation: fadeInUp 1s ease-out;
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
-        }
-
-        .card h3 {
-            color: #1db954;
-            margin-bottom: 20px;
-            font-size: 1.4rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .card-icon {
-            font-size: 1.5rem;
-        }
-
-        /* Track Items */
-        .track-list {
-            list-style: none;
-        }
-
-        .track-item {
-            display: flex;
-            align-items: center;
-            padding: 15px;
-            margin-bottom: 12px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
-            transition: all 0.3s ease;
-            border-left: 3px solid transparent;
-        }
-
-        .track-item:hover {
-            background: rgba(29, 185, 84, 0.1);
-            border-left-color: #1db954;
-            transform: translateX(5px);
-        }
-
-        .track-number {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #1db954;
-            margin-right: 15px;
-            min-width: 25px;
-        }
-
-        .track-image {
-            width: 50px;
-            height: 50px;
-            border-radius: 8px;
-            margin-right: 15px;
-            object-fit: cover;
-        }
-
-        .track-info h4 {
-            font-size: 1.1rem;
-            margin-bottom: 5px;
-            color: #ffffff;
-        }
-
-        .track-artist {
-            font-size: 0.9rem;
-            opacity: 0.8;
-        }
-
-        /* Now Playing */
-        .now-playing {
-            text-align: center;
-            animation: pulse 2s infinite;
-        }
-
-        .now-playing-image {
-            width: 100px;
-            height: 100px;
-            border-radius: 15px;
-            margin: 0 auto 15px;
-            object-fit: cover;
-            box-shadow: 0 4px 20px rgba(29, 185, 84, 0.4);
-        }
-
-        /* Statistics Cards */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-top: 30px;
-        }
-
-        .stat-card {
-            background: linear-gradient(135deg, rgba(29, 185, 84, 0.2), rgba(29, 185, 84, 0.05));
-            border-radius: 15px;
-            padding: 20px;
-            text-align: center;
-            border: 1px solid rgba(29, 185, 84, 0.3);
-            transition: transform 0.3s ease;
-        }
-
-        .stat-card:hover {
-            transform: scale(1.05);
-        }
-
-        .stat-card h4 {
-            color: #1db954;
-            margin-bottom: 10px;
-            font-size: 1.1rem;
-        }
-
-        .stat-value {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #ffffff;
-        }
-
-        /* Progress Bar */
-        .progress-bar {
-            width: 100%;
-            height: 6px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 3px;
-            overflow: hidden;
-            margin-top: 10px;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #1db954, #1ed760);
-            border-radius: 3px;
-            transition: width 0.3s ease;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .container {
-                padding: 15px;
-            }
-
-            .dashboard-grid {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
-
-            .profile-stats {
-                flex-direction: column;
-                gap: 10px;
-            }
-
-            .track-item {
-                flex-direction: column;
-                text-align: center;
-            }
-
-            .track-number {
-                margin-bottom: 10px;
-            }
-
-            .track-image {
-                margin-right: 0;
-                margin-bottom: 10px;
-            }
-        }
-
-        /* Animations */
-        @keyframes fadeInDown {
-            from {
-                opacity: 0;
-                transform: translateY(-30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes pulse {
-            0%, 100% {
-                transform: scale(1);
-            }
-            50% {
-                transform: scale(1.05);
-            }
-        }
-
-        /* Loading States */
-        .loading {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100px;
-        }
-
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid rgba(255, 255, 255, 0.3);
-            border-top: 4px solid #1db954;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* Scrollbar Styling */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #1db954;
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #1ed760;
-        }
-    </style>
+    .section {
+      margin-top: 2rem;
+      width: 100%;
+      max-width: 600px;
+      text-align: left;
+      background-color: rgba(0, 0, 0, 0.3);
+      padding: 1rem;
+      border-radius: 12px;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🎵 Spotify Analytics Dashboard</h1>
-            <button class="login-btn" id="login-btn">Connect with Spotify</button>
-        </div>
+  <h1>🎵 Your Spotify Stats</h1>
 
-        <div id="profile-section" class="profile-section" style="display: none;">
-            <div class="profile-card">
-                <img src="https://via.placeholder.com/120x120/1db954/ffffff?text=USER" alt="Profile Picture" class="profile-pic" id="profile-pic">
-                <div class="profile-info">
-                    <h2 id="username">Your Name</h2>
-                    <p id="user-email">your.email@example.com</p>
-                    <div class="profile-stats">
-                        <div class="stat-item">
-                            <div class="stat-number" id="follower-count">0</div>
-                            <div class="stat-label">Followers</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number" id="playlist-count">0</div>
-                            <div class="stat-label">Playlists</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number" id="country">US</div>
-                            <div class="stat-label">Country</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+  <button id="login-btn">Login with Spotify</button>
 
-        <div id="dashboard" class="dashboard-grid" style="display: none;">
-            <!-- Top Tracks -->
-            <div class="card">
-                <h3><span class="card-icon">🎵</span>Top 5 Tracks</h3>
-                <ul class="track-list" id="top-tracks">
-                    <li class="track-item">
-                        <span class="track-number">1</span>
-                        <img src="https://via.placeholder.com/50x50/1db954/ffffff?text=♪" alt="Track" class="track-image">
-                        <div class="track-info">
-                            <h4>Track Name</h4>
-                            <p class="track-artist">Artist Name</p>
-                        </div>
-                    </li>
-                    <li class="track-item">
-                        <span class="track-number">2</span>
-                        <img src="https://via.placeholder.com/50x50/1db954/ffffff?text=♪" alt="Track" class="track-image">
-                        <div class="track-info">
-                            <h4>Track Name</h4>
-                            <p class="track-artist">Artist Name</p>
-                        </div>
-                    </li>
-                    <li class="track-item">
-                        <span class="track-number">3</span>
-                        <img src="https://via.placeholder.com/50x50/1db954/ffffff?text=♪" alt="Track" class="track-image">
-                        <div class="track-info">
-                            <h4>Track Name</h4>
-                            <p class="track-artist">Artist Name</p>
-                        </div>
-                    </li>
-                    <li class="track-item">
-                        <span class="track-number">4</span>
-                        <img src="https://via.placeholder.com/50x50/1db954/ffffff?text=♪" alt="Track" class="track-image">
-                        <div class="track-info">
-                            <h4>Track Name</h4>
-                            <p class="track-artist">Artist Name</p>
-                        </div>
-                    </li>
-                    <li class="track-item">
-                        <span class="track-number">5</span>
-                        <img src="https://via.placeholder.com/50x50/1db954/ffffff?text=♪" alt="Track" class="track-image">
-                        <div class="track-info">
-                            <h4>Track Name</h4>
-                            <p class="track-artist">Artist Name</p>
-                        </div>
-                    </li>
-                </ul>
-            </div>
+  <div class="section">
+    <h2>Top 5 Songs</h2>
+    <!-- Top songs will be inserted here -->
+  </div>
 
-            <!-- Now Playing -->
-            <div class="card">
-                <h3><span class="card-icon">🎧</span>Now Playing</h3>
-                <div class="now-playing">
-                    <img src="https://via.placeholder.com/100x100/1db954/ffffff?text=♪" alt="Now Playing" class="now-playing-image">
-                    <h4>Track Name</h4>
-                    <p class="track-artist">Artist Name</p>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: 45%"></div>
-                    </div>
-                </div>
-            </div>
+  <div class="section">
+    <h2>Currently Playing</h2>
+    <!-- Currently playing song will appear here -->
+  </div>
 
-            <!-- Recently Played -->
-            <div class="card">
-                <h3><span class="card-icon">⏮️</span>Recently Played</h3>
-                <ul class="track-list" id="recent-tracks">
-                    <li class="track-item">
-                        <img src="https://via.placeholder.com/50x50/1db954/ffffff?text=♪" alt="Track" class="track-image">
-                        <div class="track-info">
-                            <h4>Recent Track 1</h4>
-                            <p class="track-artist">Artist Name • 2 hours ago</p>
-                        </div>
-                    </li>
-                    <li class="track-item">
-                        <img src="https://via.placeholder.com/50x50/1db954/ffffff?text=♪" alt="Track" class="track-image">
-                        <div class="track-info">
-                            <h4>Recent Track 2</h4>
-                            <p class="track-artist">Artist Name • 4 hours ago</p>
-                        </div>
-                    </li>
-                    <li class="track-item">
-                        <img src="https://via.placeholder.com/50x50/1db954/ffffff?text=♪" alt="Track" class="track-image">
-                        <div class="track-info">
-                            <h4>Recent Track 3</h4>
-                            <p class="track-artist">Artist Name • 6 hours ago</p>
-                        </div>
-                    </li>
-                </ul>
-            </div>
+  <!-- ✅ NEW Section added by JS for Listening Time -->
+  <!-- Will be dynamically inserted -->
 
-            <!-- Top Artists -->
-            <div class="card">
-                <h3><span class="card-icon">👨‍🎤</span>Top Artists</h3>
-                <ul class="track-list" id="top-artists">
-                    <li class="track-item">
-                        <span class="track-number">1</span>
-                        <img src="https://via.placeholder.com/50x50/1db954/ffffff?text=♪" alt="Artist" class="track-image">
-                        <div class="track-info">
-                            <h4>Artist Name</h4>
-                            <p class="track-artist">245 plays this month</p>
-                        </div>
-                    </li>
-                    <li class="track-item">
-                        <span class="track-number">2</span>
-                        <img src="https://via.placeholder.com/50x50/1db954/ffffff?text=♪" alt="Artist" class="track-image">
-                        <div class="track-info">
-                            <h4>Artist Name</h4>
-                            <p class="track-artist">198 plays this month</p>
-                        </div>
-                    </li>
-                    <li class="track-item">
-                        <span class="track-number">3</span>
-                        <img src="https://via.placeholder.com/50x50/1db954/ffffff?text=♪" alt="Artist" class="track-image">
-                        <div class="track-info">
-                            <h4>Artist Name</h4>
-                            <p class="track-artist">156 plays this month</p>
-                        </div>
-                    </li>
-                </ul>
-            </div>
-
-            <!-- Listening Stats -->
-            <div class="card">
-                <h3><span class="card-icon">📊</span>Listening Stats</h3>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <h4>Total Minutes</h4>
-                        <div class="stat-value">2,847</div>
-                    </div>
-                    <div class="stat-card">
-                        <h4>Songs Played</h4>
-                        <div class="stat-value">1,234</div>
-                    </div>
-                    <div class="stat-card">
-                        <h4>Artists</h4>
-                        <div class="stat-value">89</div>
-                    </div>
-                    <div class="stat-card">
-                        <h4>Genres</h4>
-                        <div class="stat-value">15</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Monthly Activity -->
-            <div class="card">
-                <h3><span class="card-icon">📅</span>Monthly Activity</h3>
-                <div class="track-list">
-                    <div class="track-item">
-                        <div class="track-info" style="width: 100%;">
-                            <h4>Most Active Day</h4>
-                            <p class="track-artist">Friday • 4.2 hours</p>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: 85%"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="track-item">
-                        <div class="track-info" style="width: 100%;">
-                            <h4>Peak Hour</h4>
-                            <p class="track-artist">8:00 PM • 32 songs</p>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: 70%"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="track-item">
-                        <div class="track-info" style="width: 100%;">
-                            <h4>Streak</h4>
-                            <p class="track-artist">12 days listening</p>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: 60%"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Mock data for demonstration
-        const mockData = {
-            profile: {
-                name: "Music Lover",
-                email: "music@example.com",
-                followers: 47,
-                playlists: 23,
-                country: "US",
-                image: "https://via.placeholder.com/120x120/1db954/ffffff?text=USER"
-            },
-            topTracks: [
-                { name: "Blinding Lights", artist: "The Weeknd", image: "https://via.placeholder.com/50x50/1db954/ffffff?text=♪" },
-                { name: "Watermelon Sugar", artist: "Harry Styles", image: "https://via.placeholder.com/50x50/1db954/ffffff?text=♪" },
-                { name: "Don't Start Now", artist: "Dua Lipa", image: "https://via.placeholder.com/50x50/1db954/ffffff?text=♪" },
-                { name: "Circles", artist: "Post Malone", image: "https://via.placeholder.com/50x50/1db954/ffffff?text=♪" },
-                { name: "Someone You Loved", artist: "Lewis Capaldi", image: "https://via.placeholder.com/50x50/1db954/ffffff?text=♪" }
-            ],
-            recentTracks: [
-                { name: "Good 4 U", artist: "Olivia Rodrigo", time: "2 hours ago", image: "https://via.placeholder.com/50x50/1db954/ffffff?text=♪" },
-                { name: "Levitating", artist: "Dua Lipa", time: "4 hours ago", image: "https://via.placeholder.com/50x50/1db954/ffffff?text=♪" },
-                { name: "Peaches", artist: "Justin Bieber", time: "6 hours ago", image: "https://via.placeholder.com/50x50/1db954/ffffff?text=♪" }
-            ],
-            topArtists: [
-                { name: "The Weeknd", plays: 245, image: "https://via.placeholder.com/50x50/1db954/ffffff?text=♪" },
-                { name: "Dua Lipa", plays: 198, image: "https://via.placeholder.com/50x50/1db954/ffffff?text=♪" },
-                { name: "Harry Styles", plays: 156, image: "https://via.placeholder.com/50x50/1db954/ffffff?text=♪" }
-            ],
-            nowPlaying: {
-                name: "Save Your Tears",
-                artist: "The Weeknd",
-                image: "https://via.placeholder.com/100x100/1db954/ffffff?text=♪",
-                progress: 45
-            }
-        };
-
-        // DOM elements
-        const loginBtn = document.getElementById('login-btn');
-        const profileSection = document.getElementById('profile-section');
-        const dashboard = document.getElementById('dashboard');
-
-        // Login simulation
-        loginBtn.addEventListener('click', function() {
-            // Show loading state
-            loginBtn.innerHTML = '<div class="spinner"></div>';
-            
-            // Simulate API call delay
-            setTimeout(() => {
-                loadUserData();
-                profileSection.style.display = 'block';
-                dashboard.style.display = 'grid';
-                loginBtn.style.display = 'none';
-            }, 2000);
-        });
-
-        function loadUserData() {
-            // Load profile data
-            document.getElementById('username').textContent = mockData.profile.name;
-            document.getElementById('user-email').textContent = mockData.profile.email;
-            document.getElementById('follower-count').textContent = mockData.profile.followers;
-            document.getElementById('playlist-count').textContent = mockData.profile.playlists;
-            document.getElementById('country').textContent = mockData.profile.country;
-            document.getElementById('profile-pic').src = mockData.profile.image;
-
-            // Load top tracks
-            const topTracksContainer = document.getElementById('top-tracks');
-            topTracksContainer.innerHTML = '';
-            mockData.topTracks.forEach((track, index) => {
-                const trackElement = createTrackElement(track, index + 1);
-                topTracksContainer.appendChild(trackElement);
-            });
-
-            // Load recent tracks
-            const recentTracksContainer = document.getElementById('recent-tracks');
-            recentTracksContainer.innerHTML = '';
-            mockData.recentTracks.forEach((track) => {
-                const trackElement = createRecentTrackElement(track);
-                recentTracksContainer.appendChild(trackElement);
-            });
-
-            // Load top artists
-            const topArtistsContainer = document.getElementById('top-artists');
-            topArtistsContainer.innerHTML = '';
-            mockData.topArtists.forEach((artist, index) => {
-                const artistElement = createArtistElement(artist, index + 1);
-                topArtistsContainer.appendChild(artistElement);
-            });
-
-            // Update now playing
-            updateNowPlaying();
-        }
-
-        function createTrackElement(track, number) {
-            const li = document.createElement('li');
-            li.className = 'track-item';
-            li.innerHTML = `
-                <span class="track-number">${number}</span>
-                <img src="${track.image}" alt="Track" class="track-image">
-                <div class="track-info">
-                    <h4>${track.name}</h4>
-                    <p class="track-artist">${track.artist}</p>
-                </div>
-            `;
-            return li;
-        }
-
-        function createRecentTrackElement(track) {
-            const li = document.createElement('li');
-            li.className = 'track-item';
-            li.innerHTML = `
-                <img src="${track.image}" alt="Track" class="track-image">
-                <div class="track-info">
-                    <h4>${track.name}</h4>
-                    <p class="track-artist">${track.artist} • ${track.time}</p>
-                </div>
-            `;
-            return li;
-        }
-
-        function createArtistElement(artist, number) {
-            const li = document.createElement('li');
-            li.className = 'track-item';
-            li.innerHTML = `
-                <span class="track-number">${number}</span>
-                <img src="${artist.image}" alt="Artist" class="track-image">
-                <div class="track-info">
-                    <h4>${artist.name}</h4>
-                    <p class="track-artist">${artist.plays} plays this month</p>
-                </div>
-            `;
-            return li;
-        }
-
-        function updateNowPlaying() {
-            const nowPlaying = mockData.nowPlaying;
-            const nowPlayingSection = document.querySelector('.now-playing');
-            nowPlayingSection.innerHTML = `
-                <img src="${nowPlaying.image}" alt="Now Playing" class="now-playing-image">
-                <h4>${nowPlaying.name}</h4>
-                <p class="track-artist">${nowPlaying.artist}</p>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: ${nowPlaying.progress}%"></div>
-                </div>
-            `;
-        }
-
-        // Add smooth scrolling and animations
-        window.addEventListener('scroll', function() {
-            const cards = document.querySelectorAll('.card');
-            cards.forEach(card => {
-                const rect = card.getBoundingClientRect();
-                if (rect.top < window.innerHeight && rect.bottom > 0) {
-                    card.style.opacity = '1';
-                    card.style.transform = 'translateY(0)';
-                }
-            });
-        });
-
-        // Simulate real-time updates
-        setInterval(() => {
-            const progressFill = document.querySelector('.progress-fill');
-            if (progressFill) {
-                let currentWidth = parseInt(progressFill.style.width);
-                currentWidth = (currentWidth + 1) % 100;
-                progressFill.style.width = currentWidth + '%';
-            }
-        }, 1000);
-    </script>
+  <script src="script.js"></script>
 </body>
 </html>
