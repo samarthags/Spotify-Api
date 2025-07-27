@@ -3,27 +3,52 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Spotify Stats</title>
+  <title>Spotify Wrapped Stats</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      background: linear-gradient(135deg, #1db954, #191414);
+      font-family: 'Helvetica Neue', sans-serif;
+      background: linear-gradient(to bottom, #1db954, #191414);
       color: white;
-      min-height: 100vh;
+      margin: 0;
+      padding: 0;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: flex-start;
-      padding: 2rem;
+      min-height: 100vh;
     }
 
-    h1 {
-      margin-bottom: 1rem;
+    header {
+      text-align: center;
+      padding: 2rem 1rem 1rem;
+    }
+
+    header h1 {
       font-size: 2.5rem;
+      margin-bottom: 0.5rem;
     }
 
-    button {
+    #profile {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+
+    #profile img {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-bottom: 1rem;
+      border: 3px solid white;
+    }
+
+    #profile h2 {
+      font-size: 1.5rem;
+      margin: 0;
+    }
+
+    #login-btn {
       background-color: #1db954;
       color: white;
       border: none;
@@ -31,56 +56,92 @@
       font-size: 1rem;
       border-radius: 30px;
       cursor: pointer;
-      margin-bottom: 2rem;
       transition: background-color 0.3s ease;
+      margin-bottom: 2rem;
     }
 
-    button:hover {
+    #login-btn:hover {
       background-color: #17a74a;
+    }
+
+    .section {
+      background-color: rgba(0, 0, 0, 0.4);
+      padding: 1.5rem;
+      margin: 1rem;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 700px;
+    }
+
+    .section h2 {
+      margin-top: 0;
+      font-size: 1.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      padding-bottom: 0.5rem;
     }
 
     ul {
       list-style: none;
       padding: 0;
+      margin-top: 1rem;
     }
 
     li {
-      margin: 0.5rem 0;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
 
-    p {
-      margin-top: 0.5rem;
-      font-style: italic;
+    li:last-child {
+      border-bottom: none;
     }
 
-    .section {
-      margin-top: 2rem;
-      width: 100%;
-      max-width: 600px;
-      text-align: left;
-      background-color: rgba(0, 0, 0, 0.3);
-      padding: 1rem;
-      border-radius: 12px;
+    .currently-playing {
+      margin-top: 1rem;
+    }
+
+    @media (max-width: 600px) {
+      #profile img {
+        width: 90px;
+        height: 90px;
+      }
+
+      header h1 {
+        font-size: 2rem;
+      }
+
+      #profile h2 {
+        font-size: 1.2rem;
+      }
     }
   </style>
 </head>
 <body>
-  <h1>🎵 Your Spotify Stats</h1>
 
-  <button id="login-btn">Login with Spotify</button>
+  <header>
+    <h1>🎧 Spotify Wrapped</h1>
+    <button id="login-btn">Login with Spotify</button>
+  </header>
+
+  <div id="profile" style="display: none;">
+    <img id="profile-pic" src="" alt="Profile Picture">
+    <h2 id="display-name">User Name</h2>
+  </div>
 
   <div class="section">
     <h2>Top 5 Songs</h2>
-    <!-- Top songs will be inserted here -->
+    <ul id="top-songs">
+      <!-- Top songs go here -->
+    </ul>
   </div>
 
   <div class="section">
     <h2>Currently Playing</h2>
-    <!-- Currently playing song will appear here -->
+    <div class="currently-playing" id="now-playing">
+      <!-- Now playing track info here -->
+    </div>
   </div>
 
-  <!-- ✅ NEW Section added by JS for Listening Time -->
-  <!-- Will be dynamically inserted -->
+  <!-- JS adds listening time here -->
 
   <script src="script.js"></script>
 </body>
