@@ -3,33 +3,45 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Spotify Wrapped Style</title>
-  <link rel="stylesheet" href="styles.css" />
+  <title>Spotify Wrapped</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <header>
-    <h1>🎧 My Spotify Capsule</h1>
-    <button id="login-btn">Login with Spotify</button>
-  </header>
+  <h1>🎧 Your Spotify Wrapped</h1>
+  <button id="login-btn">Login with Spotify</button>
 
-  <div id="profile" class="profile" style="display: none;">
-    <img id="profile-pic" src="" alt="Profile Picture" />
-    <h2 id="display-name">Username</h2>
+  <div id="profile" class="section"></div>
+
+  <div class="section" id="range-selector">
+    <button data-range="short_term">Last Week</button>
+    <button data-range="medium_term">Last Month</button>
+    <button data-range="long_term">Whole Year</button>
   </div>
 
-  <div class="section">
-    <h2>Top Songs</h2>
-    <ul id="top-songs"></ul>
+  <div id="top-songs" class="section">
+    <h2>Top 5 Songs</h2>
+    <div class="card-grid" id="songs-container"></div>
   </div>
 
-  <div class="section">
+  <div id="top-artists" class="section">
+    <h2>Top 5 Artists</h2>
+    <ul id="artists-list"></ul>
+  </div>
+
+  <div id="currently-playing" class="section">
     <h2>Currently Playing</h2>
-    <p id="now-playing">Loading...</p>
+    <p id="now-playing"></p>
   </div>
 
+  <div id="genre-breakdown" class="section">
+    <h2>Genre Breakdown</h2>
+    <ul id="genres-list"></ul>
+  </div>
+
+  <div id="listening-time" class="section"></div>
+
   <div class="section">
-    <h2>Listening Time</h2>
-    <p id="listening-time">Calculating...</p>
+    <button id="create-playlist-btn">Create Shareable Playlist</button>
   </div>
 
   <script src="script.js"></script>
