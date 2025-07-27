@@ -1,111 +1,70 @@
 body {
-  margin: 0;
-  font-family: 'Helvetica Neue', sans-serif;
-  background-color: #000;
+  font-family: "Arial", sans-serif;
+  background: linear-gradient(135deg, #1db954, #191414);
   color: white;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-height: 100vh;
-  padding: 1rem;
-}
-
-header {
   text-align: center;
-  padding: 2rem 1rem 1rem;
+  padding: 1rem;
+  margin: 0;
 }
 
-header h1 {
-  font-size: 2rem;
-  font-weight: 800;
-  color: #fff;
+h1 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
 }
 
-#login-btn {
+button {
   background-color: #1db954;
-  color: white;
   border: none;
   padding: 0.7rem 1.5rem;
-  border-radius: 30px;
-  font-weight: 600;
+  margin: 0.3rem;
   font-size: 1rem;
-  margin-bottom: 2rem;
+  border-radius: 30px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
 }
 
-#login-btn:hover {
-  background-color: #1aa34a;
-}
-
-.profile {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 1.5rem;
-}
-
-.profile img {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid #fff;
-  margin-bottom: 0.5rem;
-}
-
-.profile h2 {
-  font-size: 1.25rem;
-  font-weight: 600;
+button:hover {
+  background-color: #17a74a;
 }
 
 .section {
-  background-color: #111;
-  border-radius: 16px;
-  padding: 1.5rem;
-  margin: 1rem 0;
-  width: 100%;
-  max-width: 400px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  margin-top: 2rem;
+  padding: 1rem;
+  background-color: rgba(0,0,0,0.4);
+  border-radius: 12px;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-.section h2 {
-  margin-top: 0;
-  font-size: 1.2rem;
-  font-weight: 700;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  padding-bottom: 0.5rem;
-  margin-bottom: 1rem;
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 1rem;
+}
+
+.card {
+  background: #282828;
+  padding: 1rem;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.card img {
+  width: 100%;
+  border-radius: 8px;
 }
 
 ul {
   list-style: none;
   padding: 0;
-  margin: 0;
 }
 
 li {
-  font-size: 1rem;
-  padding: 0.4rem 0;
-  color: #ccc;
-  display: flex;
-  align-items: center;
+  padding: 0.5rem 0;
 }
 
-li span.index {
-  font-weight: 600;
-  color: #1db954;
-  margin-right: 0.5rem;
-  width: 1.5rem;
-  text-align: right;
-}
-
-p {
-  margin: 0.5rem 0 0;
-  color: #ccc;
-  font-size: 1rem;
-}
-
-strong {
-  color: #1db954;
+.profile-pic {
+  width: 100px;
+  border-radius: 50%;
+  margin-bottom: 0.5rem;
 }
