@@ -1,103 +1,118 @@
 document.addEventListener("DOMContentLoaded", () => {
   const loginBtn = document.getElementById("login-btn");
+  const hash = window.location.hash;
+  const token = new URLSearchParams(hash.substring(1)).get("access_token");
 
-  // 🔐 Handle login button
   if (loginBtn) {
     loginBtn.addEventListener("click", () => {
       window.location.href = "/api/login";
     });
   }
 
-  // 🔓 Extract token from URL
-  const hash = window.location.hash;
-  const token = new URLSearchParams(hash.substring(1)).get("access_token");
-
   if (token) {
-    fetchUserProfile(token);
-    fetchTopTracks(token);
+    fetchProfile(token);
+    loadAllStats(token, "short_term"); // default
     fetchCurrentlyPlaying(token);
     fetchListeningTime(token);
+
+    // Handle time range buttons
+    document.querySelectorAll("#range-selector button").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const range = btn.getAttribute("data-range");
+        loadAllStats(token, range);
+      });
+    });
+
+    document.getElementById("create-playlist-btn").addEventListener("click", () => {
+      alert("This feature will generate your playlist soon! 🚀");
+    });
   }
 });
 
-// 👤 Fetch Spotify user profile
-function fetchUserProfile(token) {
+function loadAllStats(token, time_range) {
+  fetchTopTracks(token, time_range);
+  fetchTopArtists(token, time_range);
+}
+
+function fetchProfile(token) {
   fetch("https://api.spotify.com/v1/me", {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+    headers: { Authorization: "Bearer " + token },
   })
-    .then((res) => res.json())
-    .then((profile) => {
+    .then(res => res.json())
+    .then(user => {
       const profileDiv = document.getElementById("profile");
-      profileDiv.style.display = "flex";
-
-      document.getElementById("display-name").textContent = profile.display_name || "Spotify User";
-
-      if (profile.images && profile.images.length > 0) {
-        document.getElementById("profile-pic").src = profile.images[0].url;
-      }
-    })
-    .catch((err) => {
-      console.error("Profile error:", err);
+      profileDiv.innerHTML = `
+        <img src="${user.images?.[0]?.url || ''}" class="profile-pic" />
+        <h2>${user.display_name}</h2>
+        <p>${user.email}</p>
+      `;
     });
 }
 
-// 🎵 Fetch top 5 tracks
-function fetchTopTracks(token) {
-  fetch(`/api/top-tracks?access_token=${token}`)
-    .then((res) => res.json())
-    .then((data) => {
-      const list = document.getElementById("top-songs");
+function fetchTopTracks(token, range) {
+  fetch(`/api/top-tracks?access_token=${token}&time_range=${range}`)
+    .then(res => res.json())
+    .then(data => {
+      const container = document.getElementById("songs-container");
+      container.innerHTML = "";
+
+      data.topTracks.forEach(track => {
+        const div = document.createElement("div");
+        div.className = "card";
+        div.innerHTML = `
+          <img src="${track.albumArt}" alt="${track.name}" />
+          <p><strong>${track.name}</strong></p>
+          <p>${track.artist}</p>
+        `;
+        container.appendChild(div);
+      });
+
+      // Genres
+      const genresList = document.getElementById("genres-list");
+      genresList.innerHTML = "";
+      data.genres.forEach(genre => {
+        const li = document.createElement("li");
+        li.textContent = genre;
+        genresList.appendChild(li);
+      });
+    });
+}
+
+function fetchTopArtists(token, range) {
+  fetch(`https://api.spotify.com/v1/me/top/artists?time_range=${range}&limit=5`, {
+    headers: { Authorization: "Bearer " + token },
+  })
+    .then(res => res.json())
+    .then(data => {
+      const list = document.getElementById("artists-list");
       list.innerHTML = "";
-
-      if (Array.isArray(data)) {
-        data.forEach((track, index) => {
-          const li = document.createElement("li");
-          li.innerHTML = `<span class="index">${index + 1}</span> ${track.name} by ${track.artist}`;
-          list.appendChild(li);
-        });
-      } else {
-        list.textContent = "Could not load top tracks.";
-      }
-    })
-    .catch((err) => {
-      console.error("Top tracks error:", err);
+      data.items.forEach(artist => {
+        const li = document.createElement("li");
+        li.textContent = artist.name;
+        list.appendChild(li);
+      });
     });
 }
 
-// 🎧 Fetch currently playing song
 function fetchCurrentlyPlaying(token) {
   fetch(`/api/currently-playing?access_token=${token}`)
-    .then((res) => res.json())
-    .then((data) => {
-      const nowPlaying = document.getElementById("now-playing");
-
+    .then(res => res.json())
+    .then(data => {
+      const p = document.getElementById("now-playing");
       if (data && data.name && data.artist) {
-        nowPlaying.textContent = `🎶 ${data.name} by ${data.artist}`;
+        p.textContent = `🎧 ${data.name} by ${data.artist}`;
       } else {
-        nowPlaying.textContent = "Nothing is currently playing.";
+        p.textContent = "Nothing is currently playing.";
       }
-    })
-    .catch((err) => {
-      console.error("Currently playing error:", err);
     });
 }
 
-// ⏱ Fetch recent listening time
 function fetchListeningTime(token) {
   fetch(`/api/recently-played?access_token=${token}`)
-    .then((res) => res.json())
-    .then((data) => {
-      const timeElement = document.getElementById("listening-time");
-
-      if (data && data.totalMinutes) {
-        timeElement.innerHTML = `You've listened for <strong>${data.totalMinutes} minutes</strong> recently 🎧`;
-      } else {
-        timeElement.textContent = "Could not calculate listening time.";
-      }
-    })
-    .catch((err) => {
-      console.error("Listening time error:", err);
+    .then(res => res.json())
+    .then(data => {
+      const div = document.getElementById("listening-time");
+      div.innerHTML = `<h2>Listening Time</h2>
+        <p>You listened for <strong>${data.totalMinutes} minutes</strong> recently 🎶</p>`;
     });
 }
