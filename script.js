@@ -1,34 +1,60 @@
 document.addEventListener("DOMContentLoaded", () => {
   const loginBtn = document.getElementById("login-btn");
 
+  // 🔐 Handle login button
   if (loginBtn) {
     loginBtn.addEventListener("click", () => {
       window.location.href = "/api/login";
     });
   }
 
+  // 🔓 Extract token from URL
   const hash = window.location.hash;
   const token = new URLSearchParams(hash.substring(1)).get("access_token");
 
   if (token) {
+    fetchUserProfile(token);
     fetchTopTracks(token);
     fetchCurrentlyPlaying(token);
-    fetchListeningTime(token); // ✅ New Feature
+    fetchListeningTime(token);
   }
 });
 
+// 👤 Fetch Spotify user profile
+function fetchUserProfile(token) {
+  fetch("https://api.spotify.com/v1/me", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+    .then((res) => res.json())
+    .then((profile) => {
+      const profileDiv = document.getElementById("profile");
+      profileDiv.style.display = "flex";
+
+      document.getElementById("display-name").textContent = profile.display_name || "Spotify User";
+
+      if (profile.images && profile.images.length > 0) {
+        document.getElementById("profile-pic").src = profile.images[0].url;
+      }
+    })
+    .catch((err) => {
+      console.error("Profile error:", err);
+    });
+}
+
+// 🎵 Fetch top 5 tracks
 function fetchTopTracks(token) {
   fetch(`/api/top-tracks?access_token=${token}`)
     .then((res) => res.json())
     .then((data) => {
-      const h2 = document.querySelector("h2:nth-of-type(1)");
-      const list = document.createElement("ul");
-      h2.after(list);
+      const list = document.getElementById("top-songs");
+      list.innerHTML = "";
 
       if (Array.isArray(data)) {
-        data.forEach((track) => {
+        data.forEach((track, index) => {
           const li = document.createElement("li");
-          li.textContent = `${track.name} by ${track.artist}`;
+          li.innerHTML = `<span class="index">${index + 1}</span> ${track.name} by ${track.artist}`;
           list.appendChild(li);
         });
       } else {
@@ -40,18 +66,17 @@ function fetchTopTracks(token) {
     });
 }
 
+// 🎧 Fetch currently playing song
 function fetchCurrentlyPlaying(token) {
   fetch(`/api/currently-playing?access_token=${token}`)
     .then((res) => res.json())
     .then((data) => {
-      const h2 = document.querySelector("h2:nth-of-type(2)");
-      const p = document.createElement("p");
-      h2.after(p);
+      const nowPlaying = document.getElementById("now-playing");
 
       if (data && data.name && data.artist) {
-        p.textContent = `🎧 Now playing: ${data.name} by ${data.artist}`;
+        nowPlaying.textContent = `🎶 ${data.name} by ${data.artist}`;
       } else {
-        p.textContent = "Nothing is currently playing.";
+        nowPlaying.textContent = "Nothing is currently playing.";
       }
     })
     .catch((err) => {
@@ -59,15 +84,18 @@ function fetchCurrentlyPlaying(token) {
     });
 }
 
+// ⏱ Fetch recent listening time
 function fetchListeningTime(token) {
   fetch(`/api/recently-played?access_token=${token}`)
     .then((res) => res.json())
     .then((data) => {
-      const statBox = document.createElement("div");
-      statBox.className = "section";
-      statBox.innerHTML = `<h2>Listening Time</h2>
-        <p>You've listened to music for <strong>${data.totalMinutes} minutes</strong> recently 🎧</p>`;
-      document.body.appendChild(statBox);
+      const timeElement = document.getElementById("listening-time");
+
+      if (data && data.totalMinutes) {
+        timeElement.innerHTML = `You've listened for <strong>${data.totalMinutes} minutes</strong> recently 🎧`;
+      } else {
+        timeElement.textContent = "Could not calculate listening time.";
+      }
     })
     .catch((err) => {
       console.error("Listening time error:", err);
