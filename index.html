@@ -1,29 +1,104 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Spotify Dashboard</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #121212;
+      color: white;
+      margin: 0;
+      padding: 2rem;
+    }
+
+    h1, h2 {
+      color: #1DB954;
+    }
+
+    .result {
+      margin-bottom: 1rem;
+    }
+
+    .track {
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #333;
+    }
+
+    button {
+      background-color: #1DB954;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 5px;
+      margin-bottom: 2rem;
+    }
+  </style>
 </head>
 <body>
-  <h1>My Spotify Stats</h1>
+  <h1>Spotify Dashboard</h1>
 
-  <section id="currently-playing">
-    <h2>Currently Playing</h2>
-    <div class="result"></div>
-  </section>
+  <button id="loginBtn">Login with Spotify</button>
 
-  <section id="recently-played">
-    <h2>Recently Played</h2>
-    <div class="result"></div>
-  </section>
+  <div id="content" style="display: none;">
+    <section id="currently-playing">
+      <h2>Currently Playing</h2>
+      <div class="result"></div>
+    </section>
 
-  <section id="top-tracks">
-    <h2>Top Tracks</h2>
-    <div class="result"></div>
-  </section>
+    <section id="recently-played">
+      <h2>Recently Played</h2>
+      <div class="result"></div>
+    </section>
 
-  <script src="script.js"></script>
+    <section id="top-tracks">
+      <h2>Top Tracks</h2>
+      <div class="result"></div>
+    </section>
+  </div>
+
+  <script>
+    const accessToken = new URLSearchParams(window.location.search).get('access_token');
+
+    document.getElementById('loginBtn').onclick = () => {
+      window.location.href = '/api/login';
+    };
+
+    if (accessToken) {
+      document.getElementById('loginBtn').style.display = 'none';
+      document.getElementById('content').style.display = 'block';
+
+      fetchAndDisplay('currently-playing');
+      fetchAndDisplay('recently-played');
+      fetchAndDisplay('top-tracks');
+    }
+
+    async function fetchAndDisplay(endpoint) {
+      const res = await fetch(`/api/${endpoint}`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      });
+
+      const data = await res.json();
+      const container = document.querySelector(`#${endpoint} .result`);
+      container.innerHTML = '';
+
+      if (endpoint === 'currently-playing' && data?.item) {
+        container.innerHTML = `<div class="track"><strong>${data.item.name}</strong> by ${data.item.artists[0].name}</div>`;
+      } else if (Array.isArray(data.items)) {
+        data.items.forEach(item => {
+          const track = item.track || item;
+          container.innerHTML += `<div class="track"><strong>${track.name}</strong> by ${track.artists[0].name}</div>`;
+        });
+      } else {
+        container.innerHTML = '<div>No data available.</div>';
+      }
+    }
+  </script>
 </body>
 </html>
