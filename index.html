@@ -1,16 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Spotify Dashboard</title>
-  <link rel="stylesheet" href="styles.css">
   <style>
     body {
-      font-family: sans-serif;
-      background: #121212;
+      font-family: Arial, sans-serif;
+      background-color: #121212;
       color: white;
-      margin: 0;
       padding: 2rem;
     }
 
@@ -18,30 +16,30 @@
       color: #1DB954;
     }
 
-    .result {
-      margin-bottom: 1rem;
-    }
-
-    .track {
-      padding: 0.5rem 0;
-      border-bottom: 1px solid #333;
-    }
-
     button {
       background-color: #1DB954;
       color: white;
-      border: none;
       padding: 10px 20px;
       font-size: 16px;
+      border: none;
       cursor: pointer;
       border-radius: 5px;
-      margin-bottom: 2rem;
+      margin-bottom: 20px;
+    }
+
+    .track {
+      margin-bottom: 10px;
+      border-bottom: 1px solid #333;
+      padding-bottom: 5px;
+    }
+
+    #content {
+      margin-top: 2rem;
     }
   </style>
 </head>
 <body>
   <h1>Spotify Dashboard</h1>
-
   <button id="loginBtn">Login with Spotify</button>
 
   <div id="content" style="display: none;">
@@ -62,41 +60,54 @@
   </div>
 
   <script>
-    const accessToken = new URLSearchParams(window.location.search).get('access_token');
+    const accessToken = new URLSearchParams(window.location.search).get("access_token");
 
-    document.getElementById('loginBtn').onclick = () => {
-      window.location.href = '/api/login';
-    };
+    document.getElementById("loginBtn").addEventListener("click", () => {
+      window.location.href = "/api/login";
+    });
 
     if (accessToken) {
-      document.getElementById('loginBtn').style.display = 'none';
-      document.getElementById('content').style.display = 'block';
+      document.getElementById("loginBtn").style.display = "none";
+      document.getElementById("content").style.display = "block";
 
-      fetchAndDisplay('currently-playing');
-      fetchAndDisplay('recently-played');
-      fetchAndDisplay('top-tracks');
+      fetchAndRender("currently-playing");
+      fetchAndRender("recently-played");
+      fetchAndRender("top-tracks");
     }
 
-    async function fetchAndDisplay(endpoint) {
-      const res = await fetch(`/api/${endpoint}`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`
-        }
-      });
-
-      const data = await res.json();
-      const container = document.querySelector(`#${endpoint} .result`);
-      container.innerHTML = '';
-
-      if (endpoint === 'currently-playing' && data?.item) {
-        container.innerHTML = `<div class="track"><strong>${data.item.name}</strong> by ${data.item.artists[0].name}</div>`;
-      } else if (Array.isArray(data.items)) {
-        data.items.forEach(item => {
-          const track = item.track || item;
-          container.innerHTML += `<div class="track"><strong>${track.name}</strong> by ${track.artists[0].name}</div>`;
+    async function fetchAndRender(endpoint) {
+      try {
+        const res = await fetch(`/api/${endpoint}`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
         });
-      } else {
-        container.innerHTML = '<div>No data available.</div>';
+
+        const data = await res.json();
+        const container = document.querySelector(`#${endpoint} .result`);
+        container.innerHTML = '';
+
+        if (endpoint === 'currently-playing' && data?.item) {
+          const track = data.item;
+          container.innerHTML = `
+            <div class="track">
+              <strong>${track.name}</strong> by ${track.artists.map(a => a.name).join(', ')}
+            </div>`;
+        } else if (Array.isArray(data.items)) {
+          data.items.forEach(item => {
+            const track = item.track || item;
+            container.innerHTML += `
+              <div class="track">
+                <strong>${track.name}</strong> by ${track.artists.map(a => a.name).join(', ')}
+              </div>`;
+          });
+        } else {
+          container.innerHTML = "<div>No data available.</div>";
+        }
+      } catch (error) {
+        console.error(error);
+        const container = document.querySelector(`#${endpoint} .result`);
+        container.innerHTML = "<div>Error fetching data.</div>";
       }
     }
   </script>
