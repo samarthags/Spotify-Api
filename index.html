@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Spotify Wrapped</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -13,10 +14,9 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1db954, #191414);
-            color: white;
-            min-height: 100vh;
-            overflow-x: hidden;
+            background: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
         }
 
         .container {
@@ -29,25 +29,41 @@
             text-align: center;
             margin-bottom: 40px;
             padding: 40px 0;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
         .header h1 {
-            font-size: 3rem;
+            font-size: 2.5rem;
             margin-bottom: 10px;
-            background: linear-gradient(45deg, #1db954, #1ed760);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: #1db954;
+            font-weight: 700;
         }
 
         .header p {
-            font-size: 1.2rem;
-            opacity: 0.8;
+            font-size: 1.1rem;
+            color: #666;
         }
 
         .login-section {
             text-align: center;
-            padding: 60px 20px;
+            padding: 80px 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .login-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 2rem;
+        }
+
+        .login-section p {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
         }
 
         .login-btn {
@@ -55,33 +71,37 @@
             color: white;
             padding: 15px 40px;
             border: none;
-            border-radius: 50px;
+            border-radius: 8px;
             font-size: 1.1rem;
-            font-weight: bold;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
             text-decoration: none;
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .login-btn:hover {
             background: #1ed760;
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(29, 185, 84, 0.3);
+            box-shadow: 0 8px 25px rgba(29, 185, 84, 0.2);
         }
 
         .loading {
             text-align: center;
-            padding: 40px;
-            font-size: 1.2rem;
+            padding: 80px 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
         .spinner {
-            border: 4px solid #333;
+            border: 4px solid #f3f3f3;
             border-top: 4px solid #1db954;
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
+            width: 50px;
+            height: 50px;
             animation: spin 1s linear infinite;
             margin: 0 auto 20px;
         }
@@ -95,20 +115,83 @@
             display: none;
         }
 
+        .profile-section {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .profile-image {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            border: 4px solid #1db954;
+            object-fit: cover;
+            animation: fadeInScale 0.8s ease-out;
+        }
+
+        .profile-name {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 10px;
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+        }
+
+        .profile-email {
+            font-size: 1.1rem;
+            color: #666;
+            animation: fadeInUp 0.8s ease-out 0.4s both;
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         .section {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 20px;
+            background: white;
+            border-radius: 15px;
             padding: 30px;
             margin-bottom: 30px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            animation: fadeInUp 0.6s ease-out;
         }
 
         .section h2 {
-            font-size: 2rem;
-            margin-bottom: 20px;
+            font-size: 1.8rem;
+            margin-bottom: 25px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+        }
+
+        .section h2 i {
             color: #1db954;
-            text-align: center;
+            font-size: 1.5rem;
         }
 
         .currently-playing {
@@ -117,22 +200,27 @@
         }
 
         .track-info {
-            background: rgba(29, 185, 84, 0.1);
-            border-radius: 15px;
-            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 25px;
             margin: 20px 0;
             border-left: 4px solid #1db954;
         }
 
         .track-name {
             font-size: 1.5rem;
-            font-weight: bold;
-            margin-bottom: 5px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
         }
 
         .track-artist {
             font-size: 1.1rem;
-            opacity: 0.8;
+            color: #666;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
 
         .top-tracks {
@@ -141,92 +229,113 @@
         }
 
         .track-item {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
             display: flex;
             align-items: center;
             transition: all 0.3s ease;
+            border: 1px solid #e9ecef;
         }
 
         .track-item:hover {
-            background: rgba(255, 255, 255, 0.1);
-            transform: translateX(10px);
+            background: #e9ecef;
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         .track-number {
-            font-size: 1.5rem;
-            font-weight: bold;
+            font-size: 1.8rem;
+            font-weight: 700;
             color: #1db954;
-            margin-right: 20px;
-            min-width: 40px;
+            margin-right: 25px;
+            min-width: 50px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .track-details h3 {
             margin-bottom: 5px;
+            color: #333;
+            font-weight: 600;
         }
 
         .track-details p {
-            opacity: 0.7;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin: 20px 0;
-        }
-
-        .stat-card {
-            background: linear-gradient(135deg, #1db954, #1ed760);
-            border-radius: 15px;
-            padding: 30px;
-            text-align: center;
-        }
-
-        .stat-number {
-            font-size: 2.5rem;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-
-        .stat-label {
-            font-size: 1.1rem;
-            opacity: 0.9;
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .error {
-            background: rgba(255, 0, 0, 0.1);
-            border: 1px solid rgba(255, 0, 0, 0.3);
-            color: #ff6b6b;
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
             padding: 15px;
-            border-radius: 10px;
+            border-radius: 8px;
             margin: 20px 0;
             text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
 
         .refresh-btn {
             background: transparent;
             border: 2px solid #1db954;
             color: #1db954;
-            padding: 10px 25px;
-            border-radius: 25px;
+            padding: 12px 25px;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 1rem;
-            margin: 10px;
+            font-weight: 600;
+            margin: 20px auto 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
             transition: all 0.3s ease;
         }
 
         .refresh-btn:hover {
             background: #1db954;
             color: white;
+            transform: translateY(-2px);
         }
 
         .no-data {
             text-align: center;
-            opacity: 0.7;
+            color: #666;
             font-style: italic;
-            padding: 20px;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .no-data i {
+            font-size: 3rem;
+            color: #dee2e6;
+            margin-bottom: 10px;
+        }
+
+        .default-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1db954, #1ed760);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            animation: fadeInScale 0.8s ease-out;
+        }
+
+        .default-avatar i {
+            font-size: 3rem;
+            color: white;
         }
 
         @media (max-width: 768px) {
@@ -235,11 +344,26 @@
             }
             
             .container {
-                padding: 10px;
+                padding: 15px;
             }
             
             .section {
                 padding: 20px;
+            }
+
+            .profile-section {
+                padding: 30px 20px;
+            }
+
+            .track-item {
+                flex-direction: column;
+                text-align: center;
+                gap: 10px;
+            }
+
+            .track-number {
+                margin-right: 0;
+                margin-bottom: 10px;
             }
         }
     </style>
@@ -247,45 +371,48 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎵 My Spotify Wrapped</h1>
+            <h1><i class="fab fa-spotify"></i> My Spotify Wrapped</h1>
             <p>Discover your music journey</p>
         </div>
 
         <!-- Login Section -->
         <div id="loginSection" class="login-section">
-            <h2>Connect to Spotify</h2>
-            <p style="margin: 20px 0;">Sign in to see your personalized music statistics</p>
-            <a href="/api/login" class="login-btn">Login with Spotify</a>
+            <h2><i class="fas fa-music"></i> Welcome to Spotify Wrapped</h2>
+            <p>Connect your Spotify account to see your personalized music statistics</p>
+            <a href="/api/login" class="login-btn">
+                <i class="fab fa-spotify"></i>
+                Login with Spotify
+            </a>
         </div>
 
         <!-- Loading Section -->
         <div id="loadingSection" class="loading" style="display: none;">
             <div class="spinner"></div>
-            <p>Loading your music data...</p>
+            <p><i class="fas fa-headphones"></i> Loading your music data...</p>
         </div>
 
         <!-- Main Content -->
         <div id="wrappedContent" class="wrapped-content">
+            <!-- User Profile -->
+            <div id="profileSection" class="profile-section">
+                <!-- Content will be loaded here -->
+            </div>
+
             <!-- Currently Playing -->
             <div class="section">
-                <h2>🎧 Currently Playing</h2>
+                <h2><i class="fas fa-play-circle"></i> Currently Playing</h2>
                 <div id="currentlyPlaying" class="currently-playing">
                     <!-- Content will be loaded here -->
                 </div>
-                <button class="refresh-btn" onclick="fetchCurrentlyPlaying()">Refresh</button>
-            </div>
-
-            <!-- Listening Stats -->
-            <div class="section">
-                <h2>📊 Your Listening Stats</h2>
-                <div id="listeningStats" class="stats-grid">
-                    <!-- Content will be loaded here -->
-                </div>
+                <button class="refresh-btn" onclick="fetchCurrentlyPlaying()">
+                    <i class="fas fa-sync-alt"></i>
+                    Refresh
+                </button>
             </div>
 
             <!-- Top Tracks -->
             <div class="section">
-                <h2>🏆 Your Top 5 Tracks</h2>
+                <h2><i class="fas fa-trophy"></i> Your Top 5 Tracks</h2>
                 <div id="topTracks" class="top-tracks">
                     <!-- Content will be loaded here -->
                 </div>
@@ -334,9 +461,9 @@
             try {
                 // Load all data concurrently
                 await Promise.all([
+                    fetchUserProfile(),
                     fetchCurrentlyPlaying(),
-                    fetchTopTracks(),
-                    fetchListeningStats()
+                    fetchTopTracks()
                 ]);
                 
                 showWrappedContent();
@@ -344,6 +471,35 @@
                 console.error('Error loading Spotify data:', error);
                 showError('Failed to load your Spotify data. Please try again.');
                 showLoginSection();
+            }
+        }
+
+        async function fetchUserProfile() {
+            try {
+                const response = await fetch(`https://api.spotify.com/v1/me`, {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`
+                    }
+                });
+                const userData = await response.json();
+                
+                const container = document.getElementById('profileSection');
+                const profileImage = userData.images && userData.images.length > 0 
+                    ? `<img src="${userData.images[0].url}" alt="Profile" class="profile-image">`
+                    : `<div class="default-avatar"><i class="fas fa-user"></i></div>`;
+                
+                container.innerHTML = `
+                    ${profileImage}
+                    <div class="profile-name">${userData.display_name || 'Spotify User'}</div>
+                    <div class="profile-email"><i class="fas fa-envelope"></i> ${userData.email || 'No email available'}</div>
+                `;
+            } catch (error) {
+                console.error('Error fetching user profile:', error);
+                document.getElementById('profileSection').innerHTML = `
+                    <div class="default-avatar"><i class="fas fa-user"></i></div>
+                    <div class="profile-name">Welcome to Spotify Wrapped</div>
+                    <div class="profile-email"><i class="fas fa-info-circle"></i> Profile information unavailable</div>
+                `;
             }
         }
 
@@ -357,21 +513,25 @@
                 if (data.name && data.name !== null) {
                     container.innerHTML = `
                         <div class="track-info">
-                            <div class="track-name">${data.name}</div>
-                            <div class="track-artist">by ${data.artist}</div>
+                            <div class="track-name"><i class="fas fa-music"></i> ${data.name}</div>
+                            <div class="track-artist"><i class="fas fa-microphone"></i> ${data.artist}</div>
                         </div>
                     `;
                 } else {
                     container.innerHTML = `
                         <div class="no-data">
-                            No track currently playing
+                            <i class="fas fa-pause-circle"></i>
+                            <span>No track currently playing</span>
                         </div>
                     `;
                 }
             } catch (error) {
                 console.error('Error fetching currently playing:', error);
                 document.getElementById('currentlyPlaying').innerHTML = `
-                    <div class="error">Failed to load currently playing track</div>
+                    <div class="error">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Failed to load currently playing track
+                    </div>
                 `;
             }
         }
@@ -386,49 +546,31 @@
                 if (data.length > 0) {
                     container.innerHTML = data.map((track, index) => `
                         <div class="track-item">
-                            <div class="track-number">#${index + 1}</div>
+                            <div class="track-number">
+                                <i class="fas fa-medal"></i>
+                                ${index + 1}
+                            </div>
                             <div class="track-details">
                                 <h3>${track.name}</h3>
-                                <p>by ${track.artist}</p>
+                                <p><i class="fas fa-user-music"></i> ${track.artist}</p>
                             </div>
                         </div>
                     `).join('');
                 } else {
                     container.innerHTML = `
                         <div class="no-data">
-                            No top tracks available
+                            <i class="fas fa-chart-line"></i>
+                            <span>No top tracks available</span>
                         </div>
                     `;
                 }
             } catch (error) {
                 console.error('Error fetching top tracks:', error);
                 document.getElementById('topTracks').innerHTML = `
-                    <div class="error">Failed to load top tracks</div>
-                `;
-            }
-        }
-
-        async function fetchListeningStats() {
-            try {
-                const response = await fetch(`/api/recently-played?access_token=${accessToken}`);
-                const data = await response.json();
-                
-                const container = document.getElementById('listeningStats');
-                
-                container.innerHTML = `
-                    <div class="stat-card">
-                        <div class="stat-number">${data.totalMinutes}</div>
-                        <div class="stat-label">Minutes Listened Recently</div>
+                    <div class="error">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Failed to load top tracks
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-number">${Math.round(data.totalMinutes / 60)}</div>
-                        <div class="stat-label">Hours of Music</div>
-                    </div>
-                `;
-            } catch (error) {
-                console.error('Error fetching listening stats:', error);
-                document.getElementById('listeningStats').innerHTML = `
-                    <div class="error">Failed to load listening statistics</div>
                 `;
             }
         }
@@ -436,7 +578,7 @@
         function showError(message) {
             const errorDiv = document.createElement('div');
             errorDiv.className = 'error';
-            errorDiv.textContent = message;
+            errorDiv.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${message}`;
             document.body.insertBefore(errorDiv, document.body.firstChild);
             
             // Remove error after 5 seconds
@@ -444,17 +586,6 @@
                 errorDiv.remove();
             }, 5000);
         }
-
-        // Add some visual flair
-        document.addEventListener('DOMContentLoaded', function() {
-            // Add floating animation to header
-            const header = document.querySelector('.header h1');
-            if (header) {
-                setInterval(() => {
-                    header.style.transform = 'translateY(' + Math.sin(Date.now() / 1000) * 5 + 'px)';
-                }, 50);
-            }
-        });
     </script>
 </body>
 </html>
