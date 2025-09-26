@@ -34,8 +34,8 @@ It provides a personalized analytics experience of your Spotify account, visuali
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/samarthags/Advanced-Spotify-Wrapped.git
-   cd Advanced-Spotify-Wrapped
+   git clone https://github.com/samarthags/Spotify-Api.git
+   cd Spotify-Api
 
 2. Install dependencies
 
