@@ -44,7 +44,7 @@ npm install
 
 3. Configure Spotify API Credentials
 
-Create a Spotify Developer App here
+Create a Spotify Developer App [here](https://developer.spotify.com/dashboard/)
 
 Get your Client ID, Client Secret, and set a Redirect URI
 
