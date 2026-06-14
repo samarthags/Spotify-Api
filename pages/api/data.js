@@ -1,4 +1,5 @@
 import { spotifyFetch, refreshAccessToken } from '../../lib/spotify';
+import { upsertUser, getBySpotifyId } from '../../lib/store';
 
 function parseCookies(cookieHeader) {
   const cookies = {};
@@ -54,6 +55,21 @@ export default async function handler(req, res) {
       .slice(0, 5)
       .map(([g]) => g);
 
+    // Persist refresh token + profile basics so a public, no-login profile
+    // page can be served for this user if they choose to publish it.
+    let shareInfo = null;
+    if (me?.id && refresh_token) {
+      const existing = getBySpotifyId(me.id);
+      const saved = upsertUser(me.id, {
+        refreshToken: refresh_token,
+        displayName: me.display_name || null,
+        avatar: me.images?.[0]?.url || null,
+        username: existing?.username || null,
+        isPublic: existing?.isPublic || false,
+      });
+      shareInfo = { username: saved.username, isPublic: saved.isPublic };
+    }
+
     res.json({
       me,
       nowPlaying: nowPlaying?.item || null,
@@ -62,6 +78,7 @@ export default async function handler(req, res) {
       topArtists: topArtists?.items || [],
       recentlyPlayed: recentlyPlayed?.items || [],
       topGenres,
+      share: shareInfo,
     });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch Spotify data', details: err.message });
