@@ -41,48 +41,39 @@ export default async function handler(req, res) {
   }
 
   if (req.method === 'GET') {
-    const record = getBySpotifyId(me.id);
-    return res.json({
-      username: record?.username || null,
-      isPublic: record?.isPublic || false,
-    });
+    const record = await getBySpotifyId(me.id);
+    return res.json({ username: record?.username || null });
   }
 
   if (req.method === 'POST') {
-    const { username, isPublic } = req.body || {};
+    const { username } = req.body || {};
 
-    let record = getBySpotifyId(me.id);
-
-    if (typeof username === 'string') {
-      const clean = username.trim().toLowerCase();
-      if (!USERNAME_RE.test(clean)) {
-        return res.status(400).json({ error: 'Username must be 3-24 characters: letters, numbers, - or _' });
-      }
-      if (isUsernameTaken(clean, me.id)) {
-        return res.status(409).json({ error: 'Username already taken' });
-      }
-      record = upsertUser(me.id, {
-        username: clean,
-        refreshToken: refresh_token || record?.refreshToken,
-        displayName: me.display_name || null,
-        avatar: me.images?.[0]?.url || null,
-      });
+    if (typeof username !== 'string' || !username.trim()) {
+      return res.status(400).json({ error: 'A name is required' });
     }
 
-    if (typeof isPublic === 'boolean') {
-      if (isPublic && !(record?.username)) {
-        return res.status(400).json({ error: 'Choose a username before publishing' });
-      }
-      record = upsertUser(me.id, {
-        isPublic,
-        refreshToken: refresh_token || record?.refreshToken,
-      });
+    const clean = username.trim().toLowerCase();
+    if (!USERNAME_RE.test(clean)) {
+      return res.status(400).json({ error: 'Use 3-24 characters: letters, numbers, - or _' });
+    }
+    if (await isUsernameTaken(clean, me.id)) {
+      return res.status(409).json({ error: 'That name is already taken' });
     }
 
-    return res.json({
-      username: record?.username || null,
-      isPublic: record?.isPublic || false,
+    const existing = await getBySpotifyId(me.id);
+    const record = await upsertUser(me.id, {
+      username: clean,
+      isPublic: true,
+      refreshToken: refresh_token || existing?.refreshToken,
+      displayName: me.display_name || null,
+      avatar: me.images?.[0]?.url || null,
     });
+
+    if (!record) {
+      return res.status(500).json({ error: 'Could not create your link, try again' });
+    }
+
+    return res.json({ username: record.username });
   }
 
   return res.status(405).json({ error: 'Method not allowed' });
