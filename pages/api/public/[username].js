@@ -1,5 +1,6 @@
 import { spotifyFetch, refreshAccessToken } from '../../../lib/spotify';
 import { getByUsername, upsertUser } from '../../../lib/store';
+import { ensureDailyPlaylist } from '../../../lib/dailyPlaylist';
 
 export default async function handler(req, res) {
   const { username } = req.query;
@@ -66,6 +67,9 @@ export default async function handler(req, res) {
       ? nowPlaying.item
       : (topTracks?.items || []).find((t) => t.preview_url) || null;
 
+    const combinedTracks = [...(topTracks?.items || []), ...(topTracksLong?.items || [])];
+    const dailyPlaylist = await ensureDailyPlaylist(record.spotifyId, access_token, combinedTracks);
+
     res.setHeader('Cache-Control', 'no-store');
     res.json({
       displayName: me?.display_name || record.displayName,
@@ -83,6 +87,7 @@ export default async function handler(req, res) {
       avgPopularity,
       previewUrl: previewTrack?.preview_url || null,
       previewTrackName: previewTrack?.name || null,
+      dailyPlaylist,
     });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch Spotify data', details: err.message });
