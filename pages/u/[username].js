@@ -2,11 +2,6 @@ import Head from 'next/head';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/router';
 
-function msToTime(ms) {
-  const s = Math.floor(ms / 1000);
-  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
-}
-
 function timeAgo(dateStr) {
   const diff = Date.now() - new Date(dateStr).getTime();
   const m = Math.floor(diff / 60000);
@@ -33,19 +28,18 @@ function getPersonality(genres) {
   return 'Musical Explorer';
 }
 
-// Blend-style duotone palettes, picked deterministically from the username
-// so each profile gets a stable, distinct two-tone identity.
-const DUOTONES = [
+// Each profile gets a stable two-tone "aura" derived from its username —
+// this is the only accent color used anywhere on the page.
+const AURAS = [
   ['#1DB954', '#0a3d23'], ['#8B5CF6', '#2a1454'], ['#EC4899', '#4a1233'],
   ['#F59E0B', '#4a2e05'], ['#3B82F6', '#0f2452'], ['#EF4444', '#451010'],
   ['#14B8A6', '#0a3e38'], ['#F97316', '#4a2208'],
 ];
-function pickDuotone(seed) {
+function pickAura(seed) {
   let hash = 0;
   for (let i = 0; i < (seed || '').length; i++) hash = (hash * 31 + seed.charCodeAt(i)) | 0;
-  return DUOTONES[Math.abs(hash) % DUOTONES.length];
+  return AURAS[Math.abs(hash) % AURAS.length];
 }
-
 function hexToRgb(hex) {
   const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   if (!m) return '29, 185, 84';
@@ -69,27 +63,6 @@ const Icon = {
   pause: (p) => (
     <svg {...p} viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" /></svg>
   ),
-  clock: (p) => (
-    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
-    </svg>
-  ),
-  spark: (p) => (
-    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
-    </svg>
-  ),
-  playlist: (p) => (
-    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" />
-      <line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" />
-    </svg>
-  ),
-  external: (p) => (
-    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" />
-    </svg>
-  ),
 };
 
 function WaveBars({ playing }) {
@@ -107,7 +80,6 @@ export default function PublicProfile() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
-  const [activeTab, setActiveTab] = useState('tracks');
   const [audioPlaying, setAudioPlaying] = useState(false);
   const [audioBlocked, setAudioBlocked] = useState(false);
   const audioRef = useRef(null);
@@ -117,10 +89,7 @@ export default function PublicProfile() {
     if (!username) return;
     try {
       const res = await fetch(`/api/public/${username}`);
-      if (!res.ok) {
-        setNotFound(true);
-        return;
-      }
+      if (!res.ok) { setNotFound(true); return; }
       const json = await res.json();
       setData(json);
       setNotFound(false);
@@ -138,9 +107,9 @@ export default function PublicProfile() {
     return () => clearInterval(interval);
   }, [fetchData]);
 
-  // Try to autoplay the 30s preview with sound when a new preview becomes
-  // available. Most browsers block unmuted autoplay without a prior user
-  // gesture — if that happens we fall back to a tappable play button.
+  // Attempt to autoplay the 30s preview with sound when a new preview
+  // appears. Browsers usually block unmuted autoplay without a prior
+  // gesture — if that happens, fall back to a tappable play button.
   useEffect(() => {
     if (!data?.previewUrl || !audioRef.current) return;
     if (lastPreviewUrl.current === data.previewUrl) return;
@@ -166,17 +135,30 @@ export default function PublicProfile() {
   };
 
   const personality = data ? getPersonality(data.topGenres) : null;
-  const [accent, accentDark] = pickDuotone(typeof username === 'string' ? username : 'aura');
-  const accentRgb = hexToRgb(accent);
+  const [aura, auraDark] = pickAura(typeof username === 'string' ? username : 'aura');
+  const auraRgb = hexToRgb(aura);
+
+  const nowTrack = data?.nowPlaying;
+  const nowArt = nowTrack?.album?.images?.[0]?.url;
+  const topArtist = data?.topArtists?.[0];
+  const topTrack = data?.topTracks?.[0];
+  const favTrack = data?.allTimeFavTrack;
+  const recent = (data?.recentlyPlayed || []).slice(0, 4);
+
+  const statusText = data?.isPlaying
+    ? `Listening to ${nowTrack?.name}`
+    : nowTrack
+      ? `Last played ${nowTrack?.name}`
+      : 'Quiet right now';
 
   return (
     <>
       <Head>
         <title>{data?.displayName ? `${data.displayName} · Aura` : 'Aura Profile'}</title>
-        <meta name="description" content="Live Spotify listening stats — no sign in required." />
+        <meta name="description" content="A live music identity card — no sign-in required." />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="true" />
-        <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
       </Head>
 
       <audio ref={audioRef} onEnded={() => setAudioPlaying(false)} onPause={() => setAudioPlaying(false)} onPlay={() => setAudioPlaying(true)} loop />
@@ -184,186 +166,147 @@ export default function PublicProfile() {
       <style jsx global>{`
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         :root {
-          --bg: #0a0a0a; --surface: #121212; --surface2: #1a1a1a;
-          --border: #232323; --green: #1DB954;
-          --white: #fff; --muted: #a0a0a0; --dim: #6a6a6a; --text: #e6e6e6;
-          --accent: ${accent}; --accent-dark: ${accentDark}; --accent-rgb: ${accentRgb};
+          --void: #07070a;
+          --ink: #15151b;
+          --ink-soft: #1d1d25;
+          --line: rgba(255,255,255,0.09);
+          --mist: #8c8c98;
+          --text: #ece9e6;
+          --aura: ${aura};
+          --aura-dark: ${auraDark};
+          --aura-rgb: ${auraRgb};
         }
-        html, body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; }
+        html, body { background: var(--void); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; }
+        :focus-visible { outline: 2px solid var(--aura); outline-offset: 3px; }
 
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        @keyframes wavebar { 0%, 100% { transform: scaleY(0.3); } 50% { transform: scaleY(1); } }
         @keyframes vinylspin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        @keyframes pulsering { 0% { box-shadow: 0 0 0 0 rgba(var(--accent-rgb), 0.45); } 100% { box-shadow: 0 0 0 14px rgba(var(--accent-rgb), 0); } }
+        @keyframes wavebar { 0%, 100% { transform: scaleY(0.3); } 50% { transform: scaleY(1); } }
         @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
-        @keyframes heroGradient { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+        @keyframes drift { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+        @keyframes breatheLive { 0%, 100% { box-shadow: 0 0 0 0 rgba(var(--aura-rgb), 0.55); } 50% { box-shadow: 0 0 0 16px rgba(var(--aura-rgb), 0); } }
+        @keyframes breatheIdle { 0%, 100% { box-shadow: 0 0 0 0 rgba(var(--aura-rgb), 0.3); } 50% { box-shadow: 0 0 0 9px rgba(var(--aura-rgb), 0); } }
+        @keyframes dotLive { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+        @media (prefers-reduced-motion: reduce) {
+          *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; }
+        }
 
         .loader, .notfound { display: flex; align-items: center; justify-content: center; min-height: 100vh; flex-direction: column; gap: 16px; text-align: center; padding: 24px; }
-        .loader-ring { width: 40px; height: 40px; border: 3px solid var(--surface2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
-        .loader-text, .notfound-sub { font-size: 13px; color: var(--dim); letter-spacing: 0.5px; }
-        .notfound-title { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700; color: var(--white); }
+        .loader-ring { width: 38px; height: 38px; border: 3px solid var(--ink-soft); border-top-color: var(--aura); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        .loader-text, .notfound-sub { font-size: 13px; color: var(--mist); letter-spacing: 0.3px; }
+        .notfound-title { font-family: 'Syne', sans-serif; font-size: 21px; font-weight: 800; color: #fff; }
 
-        .wrap { max-width: 780px; margin: 0 auto; padding: 0 0 60px; }
+        .page { min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 28px 18px 48px; }
+        .pass { width: 100%; max-width: 420px; }
 
-        /* DUOTONE HERO — Blend-style, slow animated gradient */
+        /* ---------- HERO / "PASS FRONT" ---------- */
         .hero {
-          position: relative; overflow: hidden;
-          background: linear-gradient(120deg, var(--accent-dark) 0%, var(--accent) 45%, var(--accent-dark) 100%);
-          background-size: 200% 200%;
-          animation: heroGradient 10s ease-in-out infinite;
-          padding: 48px 24px 64px; margin-bottom: -36px;
+          position: relative; border-radius: 24px; overflow: hidden;
+          padding: 40px 24px 34px; text-align: center; isolation: isolate;
+          background: linear-gradient(135deg, var(--aura-dark), #000 70%);
+          animation: fadeUp 0.5s ease-out;
         }
-        .hero::after {
-          content: ''; position: absolute; inset: 0;
-          background: radial-gradient(circle at 70% 0%, rgba(255,255,255,0.14), transparent 60%);
+        .hero-backdrop {
+          position: absolute; inset: -10%; z-index: -2;
+          background-size: cover; background-position: center;
+          filter: blur(34px) saturate(1.3) brightness(0.55);
+          transform: scale(1.15);
         }
-        .hero-inner { position: relative; max-width: 780px; margin: 0 auto; animation: fadeUp 0.5s ease-out; }
-        .hero-tag { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.75); font-weight: 700; margin-bottom: 16px; }
-        .hero-head { display: flex; align-items: center; gap: 16px; }
-        .p-avatar, .p-avatar-placeholder { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; background: rgba(0,0,0,0.3); flex-shrink: 0; border: 2px solid rgba(255,255,255,0.3); }
-        .p-avatar-placeholder { display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700; color: #fff; }
-        .p-name { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; color: #fff; letter-spacing: -0.5px; line-height: 1.1; }
-        .p-personality { font-size: 13px; color: rgba(255,255,255,0.8); margin-top: 4px; font-weight: 500; }
+        .hero-fallback {
+          position: absolute; inset: 0; z-index: -2;
+          background: linear-gradient(120deg, var(--aura-dark) 0%, var(--aura) 50%, var(--aura-dark) 100%);
+          background-size: 200% 200%; animation: drift 9s ease-in-out infinite;
+        }
+        .hero-veil { position: absolute; inset: 0; z-index: -1; background: radial-gradient(circle at 50% 0%, rgba(0,0,0,0.05), rgba(0,0,0,0.65) 75%); }
 
-        /* NOW PLAYING — floats over hero/body seam */
-        .now-playing-wrap { padding: 0 20px; position: relative; z-index: 2; animation: fadeUp 0.5s ease-out 0.1s backwards; }
-        .now-playing {
-          background: var(--surface); border: 1px solid var(--border);
-          border-radius: 12px; padding: 18px 20px; display: flex; align-items: center; gap: 16px;
-          box-shadow: 0 12px 32px rgba(0,0,0,0.5);
-        }
-        .np-art-wrap { position: relative; flex-shrink: 0; width: 64px; height: 64px; }
-        .np-art, .np-art-placeholder { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; background: var(--surface2); }
-        .np-art-placeholder { display: flex; align-items: center; justify-content: center; color: var(--dim); border-radius: 8px; }
-        .np-art.spinning { animation: vinylspin 6s linear infinite; }
-        .np-art-wrap.live::before {
-          content: ''; position: absolute; inset: -4px; border-radius: 50%;
-          animation: pulsering 1.8s ease-out infinite;
-        }
-        .np-art-hole { position: absolute; top: 50%; left: 50%; width: 10px; height: 10px; border-radius: 50%; background: var(--bg); border: 1px solid rgba(255,255,255,0.15); transform: translate(-50%, -50%); pointer-events: none; }
-        .np-info { flex: 1; min-width: 0; }
-        .np-label { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--dim); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; font-weight: 600; }
-        .np-label.live { color: var(--accent); }
-        .np-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); animation: pulsering 1.6s ease-out infinite; }
-        .np-track { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px; color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
-        .np-artist { font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .np-idle .np-track { color: var(--muted); font-weight: 600; }
+        .avatar-wrap { position: relative; width: 84px; height: 84px; margin: 0 auto 18px; }
+        .avatar-ring { position: absolute; inset: -6px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.35); }
+        .avatar-ring.live { animation: breatheLive 2.2s ease-out infinite; }
+        .avatar-ring.idle { animation: breatheIdle 3.6s ease-out infinite; }
+        .p-avatar, .p-avatar-placeholder { width: 84px; height: 84px; border-radius: 50%; object-fit: cover; background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.5); }
+        .p-avatar-placeholder { display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; color: #fff; }
 
-        .play-btn { width: 44px; height: 44px; border-radius: 50%; background: var(--accent); border: none; color: #000; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: transform 0.1s, background 0.15s; }
-        .play-btn:hover { transform: scale(1.05); }
-        .play-btn:active { transform: scale(0.95); }
-        .play-btn svg { width: 18px; height: 18px; }
+        .p-name { font-family: 'Syne', sans-serif; font-size: 27px; font-weight: 800; color: #fff; letter-spacing: -0.3px; line-height: 1.15; }
+        .p-tagline { font-size: 12px; color: rgba(255,255,255,0.7); margin-top: 4px; font-weight: 500; letter-spacing: 0.2px; }
 
-        .wave { display: flex; align-items: center; gap: 3px; height: 18px; flex-shrink: 0; }
-        .wave span { width: 3px; height: 100%; background: var(--accent); border-radius: 2px; transform: scaleY(0.3); opacity: 0.5; }
+        .status-line { display: inline-flex; align-items: center; gap: 7px; margin-top: 16px; padding: 7px 14px; border-radius: 100px; background: rgba(0,0,0,0.32); border: 1px solid rgba(255,255,255,0.12); max-width: 100%; }
+        .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--aura); flex-shrink: 0; }
+        .status-dot.live { animation: dotLive 1.1s ease-in-out infinite; }
+        .status-text { font-size: 12px; color: rgba(255,255,255,0.88); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* Perforated tear between the pass and the details below */
+        .tear { position: relative; height: 18px; margin: 0 4px; }
+        .tear::before {
+          content: ''; position: absolute; top: 0; left: 14px; right: 14px; height: 0;
+          border-top: 1.5px dashed rgba(255,255,255,0.14);
+        }
+        .tear-dots { position: absolute; top: -10px; left: 0; right: 0; display: flex; justify-content: space-between; padding: 0 2px; }
+        .tear-dots span { width: 13px; height: 13px; border-radius: 50%; background: var(--void); }
+
+        /* ---------- BODY WIDGETS ---------- */
+        .body { display: flex; flex-direction: column; gap: 12px; margin-top: -2px; }
+        .eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 1.4px; text-transform: uppercase; color: var(--mist); font-weight: 600; }
+        .eyebrow.aura { color: var(--aura); }
+
+        .card { background: var(--ink); border: 1px solid var(--line); border-radius: 16px; animation: fadeUp 0.5s ease-out backwards; }
+
+        .now-card { display: flex; align-items: center; gap: 14px; padding: 14px; animation-delay: 0.05s; }
+        .now-art-wrap { position: relative; width: 60px; height: 60px; flex-shrink: 0; }
+        .now-art, .now-art-placeholder { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; background: var(--ink-soft); }
+        .now-art-placeholder { display: flex; align-items: center; justify-content: center; color: var(--mist); }
+        .now-art.spin { animation: vinylspin 6s linear infinite; }
+        .now-hole { position: absolute; top: 50%; left: 50%; width: 9px; height: 9px; border-radius: 50%; background: var(--void); border: 1px solid rgba(255,255,255,0.15); transform: translate(-50%, -50%); }
+        .now-info { flex: 1; min-width: 0; }
+        .now-track { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 800; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 4px; }
+        .now-artist { font-size: 12.5px; color: var(--mist); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+        .now-controls { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+        .wave { display: flex; align-items: center; gap: 3px; height: 16px; }
+        .wave span { width: 3px; height: 100%; background: var(--aura); border-radius: 2px; transform: scaleY(0.3); opacity: 0.5; }
         .wave.playing span { animation: wavebar 0.9s ease-in-out infinite; opacity: 1; }
-        .preview-hint { font-size: 11px; color: var(--dim); text-align: center; margin-top: 8px; }
+        .play-btn { width: 38px; height: 38px; border-radius: 50%; background: var(--aura); border: none; color: #000; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.1s; }
+        .play-btn:hover { transform: scale(1.06); }
+        .play-btn:active { transform: scale(0.94); }
+        .play-btn svg { width: 16px; height: 16px; }
+        .preview-hint { font-size: 11px; color: var(--mist); text-align: center; margin-top: -4px; }
 
-        .body { padding: 56px 20px 0; }
+        .duo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .tile { padding: 16px 14px; text-align: center; animation-delay: 0.1s; transition: transform 0.15s, border-color 0.15s; }
+        .tile:hover { transform: translateY(-2px); border-color: var(--aura); }
+        .tile-art, .tile-art-placeholder { width: 52px; height: 52px; margin: 10px auto 12px; object-fit: cover; background: var(--ink-soft); }
+        .tile-art.round, .tile-art-placeholder.round { border-radius: 50%; }
+        .tile-art.square, .tile-art-placeholder.square { border-radius: 10px; }
+        .tile-art-placeholder { display: flex; align-items: center; justify-content: center; color: var(--mist); }
+        .tile-name { font-family: 'Syne', sans-serif; font-size: 13.5px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tile-sub { font-size: 11.5px; color: var(--mist); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        /* DAILY PLAYLIST — shimmer + hover lift */
-        .daily-card {
-          margin-bottom: 16px; border-radius: 14px; padding: 18px; position: relative; overflow: hidden;
-          background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%);
-          border: 1px solid var(--border); display: flex; align-items: center; gap: 16px;
-          animation: fadeUp 0.5s ease-out 0.15s backwards;
-          transition: transform 0.2s, border-color 0.2s;
-        }
-        .daily-card:hover { transform: translateY(-2px); border-color: var(--accent); }
-        .daily-card::before {
-          content: ''; position: absolute; inset: 0;
-          background: linear-gradient(100deg, transparent 30%, rgba(255,255,255,0.06) 50%, transparent 70%);
-          background-size: 200% 100%; animation: shimmer 3.5s linear infinite;
-        }
-        .daily-art-wrap { position: relative; width: 64px; height: 64px; border-radius: 10px; flex-shrink: 0; overflow: hidden; box-shadow: 0 6px 18px rgba(0,0,0,0.4); }
-        .daily-art, .daily-art-placeholder { width: 100%; height: 100%; object-fit: cover; background: var(--accent); }
-        .daily-art-placeholder { display: flex; align-items: center; justify-content: center; color: rgba(0,0,0,0.5); }
-        .daily-info { flex: 1; min-width: 0; position: relative; z-index: 1; }
-        .daily-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent); font-weight: 700; margin-bottom: 4px; }
-        .daily-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 800; color: var(--white); margin-bottom: 2px; }
-        .daily-sub { font-size: 12px; color: var(--dim); }
-        .daily-btn {
-          flex-shrink: 0; background: var(--accent); color: #000; border: none; border-radius: 100px;
-          padding: 10px 18px; font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: none;
-          display: inline-flex; align-items: center; gap: 6px; position: relative; z-index: 1;
-          transition: transform 0.1s, background 0.15s;
-        }
-        .daily-btn:hover { transform: scale(1.04); }
-        .daily-btn:active { transform: scale(0.96); }
+        .row-card { display: flex; align-items: center; gap: 14px; padding: 14px; animation-delay: 0.15s; }
+        .row-art, .row-art-placeholder { width: 50px; height: 50px; border-radius: 10px; object-fit: cover; background: var(--ink-soft); flex-shrink: 0; }
+        .row-art-placeholder { display: flex; align-items: center; justify-content: center; color: var(--mist); }
+        .row-info { flex: 1; min-width: 0; }
+        .row-name { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 3px; }
+        .row-sub { font-size: 12px; color: var(--mist); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
 
-        /* STAT GRID — Blend-style big tiles */
-        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px; }
-        .stat-tile {
-          background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
-          padding: 18px; position: relative; overflow: hidden;
-          animation: fadeUp 0.5s ease-out backwards;
-          transition: transform 0.2s, border-color 0.2s;
-        }
-        .stat-tile:hover { transform: translateY(-3px); border-color: var(--accent); }
-        .stat-tile.wide { grid-column: 1 / -1; display: flex; align-items: center; gap: 14px; }
-        .stat-tile-icon { color: var(--accent); margin-bottom: 10px; }
-        .stat-tile-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--dim); font-weight: 700; margin-bottom: 6px; }
-        .stat-tile-value { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; color: var(--white); line-height: 1.1; }
-        .stat-tile-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
-        .stat-art, .stat-art-placeholder { width: 52px; height: 52px; border-radius: 8px; object-fit: cover; flex-shrink: 0; background: var(--surface2); }
-        .stat-art-placeholder { display: flex; align-items: center; justify-content: center; color: var(--dim); }
-        .stat-tile-name { font-size: 13px; font-weight: 600; color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .stat-tile-name-sub { font-size: 12px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .list-card { padding: 16px 14px 6px; animation-delay: 0.2s; }
+        .list-card .eyebrow { padding-left: 2px; }
+        .recent-row { display: flex; align-items: center; gap: 11px; padding: 10px 2px; border-top: 1px solid var(--line); }
+        .recent-row:first-of-type { border-top: none; margin-top: 10px; }
+        .recent-art, .recent-art-placeholder { width: 36px; height: 36px; border-radius: 8px; object-fit: cover; background: var(--ink-soft); flex-shrink: 0; }
+        .recent-art-placeholder { display: flex; align-items: center; justify-content: center; color: var(--mist); }
+        .recent-info { flex: 1; min-width: 0; }
+        .recent-name { font-size: 13px; font-weight: 500; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .recent-artist { font-size: 11.5px; color: var(--mist); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+        .recent-time { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--mist); flex-shrink: 0; }
 
-        .taste-bar-row { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
-        .taste-bar { flex: 1; height: 6px; border-radius: 100px; background: var(--surface2); overflow: hidden; }
-        .taste-bar-fill { height: 100%; background: var(--accent); border-radius: 100px; transition: width 0.4s; }
-        .taste-label-row { display: flex; justify-content: space-between; font-size: 11px; color: var(--dim); margin-top: 6px; }
+        .empty-note { font-size: 12px; color: var(--mist); padding: 4px 2px 2px; }
 
-        .personality-card {
-          margin-bottom: 16px; border-radius: 12px; padding: 16px 20px;
-          background: var(--surface); border: 1px solid var(--border);
-          animation: fadeUp 0.5s ease-out 0.05s backwards;
-        }
-        .p-label2 { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--dim); margin-bottom: 10px; font-weight: 600; }
-        .p-genres { display: flex; gap: 8px; flex-wrap: wrap; }
-        .p-genre { font-size: 11px; padding: 5px 12px; border-radius: 100px; background: var(--surface2); color: var(--white); text-transform: capitalize; border: 1px solid var(--border); }
-        .p-genre:first-child { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 700; }
+        footer { text-align: center; padding: 18px 4px 4px; }
+        .footer-text { font-size: 11.5px; color: var(--mist); }
+        .footer-text a { color: var(--aura); text-decoration: none; }
 
-        .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 16px; animation: fadeUp 0.5s ease-out 0.2s backwards; }
-        .card-header { padding: 16px 20px 0; }
-        .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); }
-        .tab { padding: 10px 4px; font-size: 13px; font-weight: 600; color: var(--dim); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; margin-right: 20px; transition: color 0.15s, border-color 0.15s; user-select: none; }
-        .tab:hover { color: var(--muted); }
-        .tab.active { color: var(--white); border-color: var(--accent); }
-        .card-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: var(--white); margin-bottom: 12px; }
-
-        .track-list, .artist-list, .recent-list { padding: 6px 0; }
-        .track-row, .artist-row, .recent-row { display: flex; align-items: center; gap: 12px; padding: 9px 20px; transition: background 0.15s, transform 0.15s; }
-        .track-row:hover, .artist-row:hover, .recent-row:hover { background: var(--surface2); transform: translateX(3px); }
-        .track-num { font-size: 12px; color: var(--dim); width: 18px; text-align: center; font-variant-numeric: tabular-nums; flex-shrink: 0; }
-        .track-art, .artist-img, .recent-art, .recent-art-placeholder { object-fit: cover; flex-shrink: 0; background: var(--surface2); }
-        .track-art, .recent-art, .recent-art-placeholder { width: 38px; height: 38px; border-radius: 4px; }
-        .artist-img { width: 40px; height: 40px; border-radius: 50%; }
-        .track-info, .artist-info, .recent-info { flex: 1; min-width: 0; }
-        .track-name, .artist-name, .recent-name { font-size: 13px; font-weight: 500; color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
-        .track-artist, .artist-genres, .recent-artist { font-size: 12px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .track-duration, .artist-rank, .recent-time { font-size: 12px; color: var(--dim); flex-shrink: 0; font-variant-numeric: tabular-nums; }
-
-        .empty { padding: 32px 20px; text-align: center; color: var(--dim); font-size: 13px; }
-
-        footer { text-align: center; padding: 24px 20px 8px; }
-        .footer-text { font-size: 12px; color: var(--dim); }
-        .footer-text a { color: var(--accent); text-decoration: none; }
-
-        @media (max-width: 768px) {
-          .hero { padding: 36px 16px 56px; }
-          .p-avatar, .p-avatar-placeholder { width: 52px; height: 52px; }
-          .p-name { font-size: 22px; }
-          .now-playing-wrap, .body { padding-left: 14px; padding-right: 14px; }
-          .now-playing { padding: 14px 16px; gap: 12px; }
-          .np-art-wrap, .np-art, .np-art-placeholder { width: 52px; height: 52px; }
-          .stats-grid { grid-template-columns: 1fr; }
-          .daily-card { padding: 14px; gap: 12px; }
-          .daily-art-wrap { width: 52px; height: 52px; }
-          .daily-title { font-size: 14px; }
-          .daily-btn { padding: 9px 14px; font-size: 12px; }
+        @media (max-width: 420px) {
+          .hero { padding: 34px 18px 28px; }
+          .p-name { font-size: 24px; }
         }
       `}</style>
 
@@ -374,205 +317,110 @@ export default function PublicProfile() {
         </div>
       ) : notFound ? (
         <div className="notfound">
-          <Icon.alert style={{ width: 32, height: 32, color: 'var(--dim)' }} />
+          <Icon.alert style={{ width: 30, height: 30, color: 'var(--mist)' }} />
           <div className="notfound-title">Profile not found</div>
           <p className="notfound-sub">This profile doesn&apos;t exist or hasn&apos;t been created yet.</p>
         </div>
       ) : (
-        <div className="wrap">
-          <div className="hero">
-            <div className="hero-inner">
-              <div className="hero-tag">Live Spotify Stats</div>
-              <div className="hero-head">
+        <div className="page">
+          <div className="pass">
+            <div className="hero">
+              {nowArt ? <div className="hero-backdrop" style={{ backgroundImage: `url(${nowArt})` }} /> : <div className="hero-fallback" />}
+              <div className="hero-veil" />
+
+              <div className="avatar-wrap">
+                <span className={`avatar-ring ${data?.isPlaying ? 'live' : 'idle'}`} />
                 {data?.avatar ? (
                   <img className="p-avatar" src={data.avatar} alt={data.displayName} />
                 ) : (
                   <div className="p-avatar-placeholder">{data?.displayName?.[0] || '?'}</div>
                 )}
-                <div>
-                  <div className="p-name">{data?.displayName || 'Listener'}</div>
-                  {personality && <div className="p-personality">{personality}</div>}
-                </div>
+              </div>
+
+              <div className="p-name">{data?.displayName || 'Listener'}</div>
+              {personality && <div className="p-tagline">{personality}</div>}
+
+              <div className="status-line">
+                <span className={`status-dot ${data?.isPlaying ? 'live' : ''}`} />
+                <span className="status-text">{statusText}</span>
               </div>
             </div>
-          </div>
 
-          <div className="now-playing-wrap">
-            <div className={`now-playing ${!data?.isPlaying ? 'np-idle' : ''}`}>
-              <div className={`np-art-wrap ${data?.isPlaying ? 'live' : ''}`}>
-                {data?.nowPlaying?.album?.images?.[0]?.url ? (
-                  <img className={`np-art ${audioPlaying ? 'spinning' : ''}`} src={data.nowPlaying.album.images[0].url} alt="Album art" />
-                ) : (
-                  <div className="np-art-placeholder"><Icon.music style={{ width: 22, height: 22 }} /></div>
-                )}
-                {audioPlaying && data?.nowPlaying?.album?.images?.[0]?.url && <span className="np-art-hole" />}
+            <div className="tear">
+              <div className="tear-dots">
+                {Array.from({ length: 11 }).map((_, i) => <span key={i} />)}
               </div>
-              <div className="np-info">
-                <div className={`np-label ${data?.isPlaying ? 'live' : ''}`}>
-                  {data?.isPlaying ? <><span className="np-dot" /> Now Playing</> : 'Last Played'}
-                </div>
-                <div className="np-track">{data?.nowPlaying?.name || 'Nothing playing right now'}</div>
-                {data?.nowPlaying && (
-                  <div className="np-artist">{data.nowPlaying.artists?.map(a => a.name).join(', ')}</div>
-                )}
-              </div>
-              {data?.previewUrl ? (
-                <>
-                  <WaveBars playing={audioPlaying} />
-                  <button className="play-btn" onClick={togglePlay} title={audioPlaying ? 'Pause preview' : 'Play preview'}>
-                    {audioPlaying ? <Icon.pause /> : <Icon.play />}
-                  </button>
-                </>
-              ) : null}
             </div>
-            {data?.previewUrl && audioBlocked && (
-              <p className="preview-hint">Tap play to hear a 30s preview</p>
-            )}
-          </div>
 
-          <div className="body">
-            {data?.dailyPlaylist?.url && (
-              <div className="daily-card">
-                <div className="daily-art-wrap">
-                  {data.dailyPlaylist.image ? (
-                    <img className="daily-art" src={data.dailyPlaylist.image} alt="Daily playlist cover" />
+            <div className="body">
+              {/* Now Playing — the main, featured widget */}
+              <div className="card now-card">
+                <div className="now-art-wrap">
+                  {nowArt ? (
+                    <img className={`now-art ${audioPlaying ? 'spin' : ''}`} src={nowArt} alt="Album art" />
                   ) : (
-                    <div className="daily-art-placeholder"><Icon.playlist style={{ width: 22, height: 22 }} /></div>
+                    <div className="now-art-placeholder"><Icon.music style={{ width: 20, height: 20 }} /></div>
                   )}
+                  {audioPlaying && nowArt && <span className="now-hole" />}
                 </div>
-                <div className="daily-info">
-                  <div className="daily-label">Updated Today</div>
-                  <div className="daily-title">Aura Daily</div>
-                  <div className="daily-sub">Top tracks, refreshed every day</div>
+                <div className="now-info">
+                  <span className={`eyebrow ${data?.isPlaying ? 'aura' : ''}`}>{data?.isPlaying ? 'Now Playing' : 'Last Played'}</span>
+                  <div className="now-track">{nowTrack?.name || 'Nothing yet'}</div>
+                  {nowTrack && <div className="now-artist">{nowTrack.artists?.map(a => a.name).join(', ')}</div>}
                 </div>
-                <a className="daily-btn" href={data.dailyPlaylist.url} target="_blank" rel="noreferrer">
-                  Open <Icon.external style={{ width: 14, height: 14 }} />
-                </a>
-              </div>
-            )}
-
-            {personality && data?.topGenres?.length > 0 && (
-              <div className="personality-card">
-                <div className="p-label2">Top Genres</div>
-                <div className="p-genres">
-                  {data.topGenres.map(g => <span className="p-genre" key={g}>{g}</span>)}
-                </div>
-              </div>
-            )}
-
-            <div className="stats-grid">
-              <div className="stat-tile" style={{ animationDelay: '0.05s' }}>
-                <div className="stat-tile-icon"><Icon.clock style={{ width: 20, height: 20 }} /></div>
-                <div className="stat-tile-label">Recent Listening</div>
-                <div className="stat-tile-value">{data?.recentMinutes ?? '—'} min</div>
-                <div className="stat-tile-sub">across last 50 plays</div>
-              </div>
-
-              <div className="stat-tile" style={{ animationDelay: '0.1s' }}>
-                <div className="stat-tile-icon"><Icon.spark style={{ width: 20, height: 20 }} /></div>
-                <div className="stat-tile-label">Taste Profile</div>
-                <div className="stat-tile-value">{data?.avgPopularity != null ? `${data.avgPopularity}%` : '—'}</div>
-                <div className="taste-bar-row">
-                  <div className="taste-bar"><div className="taste-bar-fill" style={{ width: `${data?.avgPopularity ?? 0}%` }} /></div>
-                </div>
-                <div className="taste-label-row"><span>Niche</span><span>Mainstream</span></div>
-              </div>
-
-              <div className="stat-tile wide" style={{ animationDelay: '0.15s' }}>
-                {data?.allTimeFavTrack?.album?.images?.[2]?.url ? (
-                  <img className="stat-art" src={data.allTimeFavTrack.album.images[2].url} alt={data.allTimeFavTrack.name} />
-                ) : (
-                  <div className="stat-art-placeholder"><Icon.music style={{ width: 18, height: 18 }} /></div>
+                {data?.previewUrl && (
+                  <div className="now-controls">
+                    <WaveBars playing={audioPlaying} />
+                    <button className="play-btn" onClick={togglePlay} aria-label={audioPlaying ? 'Pause preview' : 'Play preview'}>
+                      {audioPlaying ? <Icon.pause /> : <Icon.play />}
+                    </button>
+                  </div>
                 )}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div className="stat-tile-label">All-Time Favorite Track</div>
-                  <div className="stat-tile-name">{data?.allTimeFavTrack?.name || 'Not enough data yet'}</div>
-                  <div className="stat-tile-name-sub">{data?.allTimeFavTrack?.artists?.map(a => a.name).join(', ') || '—'}</div>
+              </div>
+              {data?.previewUrl && audioBlocked && <p className="preview-hint">Tap play to hear a 30s preview</p>}
+
+              {/* Top Artist + Top Track this month */}
+              <div className="duo-grid">
+                <div className="card tile">
+                  <span className="eyebrow">This Month</span>
+                  {topArtist?.images?.[2]?.url ? (
+                    <img className="tile-art round" src={topArtist.images[2].url} alt={topArtist.name} />
+                  ) : (
+                    <div className="tile-art-placeholder round"><Icon.music style={{ width: 16, height: 16 }} /></div>
+                  )}
+                  <div className="tile-name">{topArtist?.name || 'Not enough data'}</div>
+                  <div className="tile-sub">Top Artist</div>
+                </div>
+                <div className="card tile">
+                  <span className="eyebrow">This Month</span>
+                  {topTrack?.album?.images?.[2]?.url ? (
+                    <img className="tile-art square" src={topTrack.album.images[2].url} alt={topTrack.name} />
+                  ) : (
+                    <div className="tile-art-placeholder square"><Icon.music style={{ width: 16, height: 16 }} /></div>
+                  )}
+                  <div className="tile-name">{topTrack?.name || 'Not enough data'}</div>
+                  <div className="tile-sub">Top Track</div>
                 </div>
               </div>
 
-              <div className="stat-tile wide" style={{ animationDelay: '0.2s' }}>
-                {data?.allTimeFavArtist?.images?.[2]?.url ? (
-                  <img className="stat-art" src={data.allTimeFavArtist.images[2].url} alt={data.allTimeFavArtist.name} style={{ borderRadius: '50%' }} />
+              {/* All-time most played */}
+              <div className="card row-card">
+                {favTrack?.album?.images?.[2]?.url ? (
+                  <img className="row-art" src={favTrack.album.images[2].url} alt={favTrack.name} />
                 ) : (
-                  <div className="stat-art-placeholder" style={{ borderRadius: '50%' }}><Icon.music style={{ width: 18, height: 18 }} /></div>
+                  <div className="row-art-placeholder"><Icon.music style={{ width: 18, height: 18 }} /></div>
                 )}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div className="stat-tile-label">Most Played Artist (All-Time)</div>
-                  <div className="stat-tile-name">{data?.allTimeFavArtist?.name || 'Not enough data yet'}</div>
-                  <div className="stat-tile-name-sub">{data?.allTimeFavArtist?.genres?.slice(0, 2).join(', ') || '—'}</div>
+                <div className="row-info">
+                  <span className="eyebrow">All-Time Favorite</span>
+                  <div className="row-name">{favTrack?.name || 'Not enough data yet'}</div>
+                  <div className="row-sub">{favTrack?.artists?.map(a => a.name).join(', ') || 'Keep listening to unlock this'}</div>
                 </div>
               </div>
 
-              <div className="stat-tile wide" style={{ animationDelay: '0.25s' }}>
-                {data?.oldestRecent?.track?.album?.images?.[2]?.url ? (
-                  <img className="stat-art" src={data.oldestRecent.track.album.images[2].url} alt={data.oldestRecent.track.name} />
-                ) : (
-                  <div className="stat-art-placeholder"><Icon.music style={{ width: 18, height: 18 }} /></div>
-                )}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div className="stat-tile-label">Earliest in Recent History</div>
-                  <div className="stat-tile-name">{data?.oldestRecent?.track?.name || 'No history yet'}</div>
-                  <div className="stat-tile-name-sub">{data?.oldestRecent ? timeAgo(data.oldestRecent.played_at) : '—'}</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="card">
-              <div className="card-header">
-                <div className="tabs">
-                  <div className={`tab ${activeTab === 'tracks' ? 'active' : ''}`} onClick={() => setActiveTab('tracks')}>Top Tracks</div>
-                  <div className={`tab ${activeTab === 'artists' ? 'active' : ''}`} onClick={() => setActiveTab('artists')}>Top Artists</div>
-                </div>
-              </div>
-
-              {activeTab === 'tracks' && (
-                <div className="track-list">
-                  {data?.topTracks?.length ? data.topTracks.map((t, i) => (
-                    <div className="track-row" key={t.id}>
-                      <span className="track-num">{i + 1}</span>
-                      {t.album?.images?.[2]?.url ? (
-                        <img className="track-art" src={t.album.images[2].url} alt={t.name} />
-                      ) : (
-                        <div className="track-art" />
-                      )}
-                      <div className="track-info">
-                        <div className="track-name">{t.name}</div>
-                        <div className="track-artist">{t.artists?.map(a => a.name).join(', ')}</div>
-                      </div>
-                      <span className="track-duration">{msToTime(t.duration_ms)}</span>
-                    </div>
-                  )) : <div className="empty">No top tracks found yet.</div>}
-                </div>
-              )}
-
-              {activeTab === 'artists' && (
-                <div className="artist-list">
-                  {data?.topArtists?.length ? data.topArtists.map((a, i) => (
-                    <div className="artist-row" key={a.id}>
-                      <span className="track-num">{i + 1}</span>
-                      {a.images?.[2]?.url ? (
-                        <img className="artist-img" src={a.images[2].url} alt={a.name} />
-                      ) : (
-                        <div className="artist-img" />
-                      )}
-                      <div className="artist-info">
-                        <div className="artist-name">{a.name}</div>
-                        <div className="artist-genres">{a.genres?.slice(0, 2).join(', ')}</div>
-                      </div>
-                      <span className="artist-rank">{a.popularity || 0}% pop.</span>
-                    </div>
-                  )) : <div className="empty">No top artists found yet.</div>}
-                </div>
-              )}
-            </div>
-
-            <div className="card">
-              <div className="card-header" style={{ paddingBottom: 0 }}>
-                <div className="card-title">Recently Played</div>
-              </div>
-              <div className="recent-list">
-                {data?.recentlyPlayed?.length ? data.recentlyPlayed.map((item, i) => (
+              {/* Recently played */}
+              <div className="card list-card">
+                <span className="eyebrow">Recently Played</span>
+                {recent.length ? recent.map((item, i) => (
                   <div className="recent-row" key={`${item.track?.id}-${i}`}>
                     {item.track?.album?.images?.[2]?.url ? (
                       <img className="recent-art" src={item.track.album.images[2].url} alt={item.track.name} />
@@ -585,13 +433,13 @@ export default function PublicProfile() {
                     </div>
                     <span className="recent-time">{timeAgo(item.played_at)}</span>
                   </div>
-                )) : <div className="empty">No recent history.</div>}
+                )) : <p className="empty-note">Nothing played recently.</p>}
               </div>
-            </div>
 
-            <footer>
-              <p className="footer-text">Powered by <a href="/" target="_blank">Aura</a> · Not affiliated with Spotify AB</p>
-            </footer>
+              <footer>
+                <p className="footer-text">Powered by <a href="/" target="_blank" rel="noreferrer">Aura</a> · Not affiliated with Spotify AB</p>
+              </footer>
+            </div>
           </div>
         </div>
       )}
