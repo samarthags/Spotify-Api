@@ -81,7 +81,6 @@ export default function Dashboard() {
 
   const [username, setUsername] = useState('');
   const [savedUsername, setSavedUsername] = useState(null);
-  const [isPublic, setIsPublic] = useState(false);
   const [shareLoading, setShareLoading] = useState(false);
   const [shareError, setShareError] = useState('');
   const [copied, setCopied] = useState(false);
@@ -92,12 +91,9 @@ export default function Dashboard() {
       if (res.status === 401) { router.push('/'); return; }
       const json = await res.json();
       setData(json);
-      if (json.share) {
-        if (json.share.username) {
-          setSavedUsername(json.share.username);
-          setUsername(json.share.username);
-        }
-        setIsPublic(!!json.share.isPublic);
+      if (json.share?.username) {
+        setSavedUsername(json.share.username);
+        setUsername(json.share.username);
       }
     } catch (e) {
       console.error(e);
@@ -140,32 +136,6 @@ export default function Dashboard() {
     }
   };
 
-  const togglePublic = async () => {
-    if (!savedUsername) {
-      setShareError('Choose a username first');
-      return;
-    }
-    setShareError('');
-    setShareLoading(true);
-    try {
-      const res = await fetch('/api/profile', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isPublic: !isPublic }),
-      });
-      const json = await res.json();
-      if (!res.ok) {
-        setShareError(json.error || 'Could not update');
-      } else {
-        setIsPublic(json.isPublic);
-      }
-    } catch {
-      setShareError('Something went wrong');
-    } finally {
-      setShareLoading(false);
-    }
-  };
-
   const copyLink = () => {
     if (!shareUrl) return;
     navigator.clipboard.writeText(shareUrl);
@@ -183,7 +153,9 @@ export default function Dashboard() {
       </Head>
 
       <style jsx global>{`
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        button, a, .tab, .stat-card { -webkit-tap-highlight-color: transparent; outline: none; }
+        button:focus, a:focus { outline: none; }
         :root {
           --bg: #0a0a0a; --surface: #121212; --surface2: #1a1a1a;
           --border: #232323; --green: #1DB954;
@@ -234,43 +206,50 @@ export default function Dashboard() {
         .p-genres { display: flex; gap: 8px; flex-wrap: wrap; }
         .p-genre { font-size: 11px; padding: 4px 10px; border-radius: 100px; background: var(--surface2); color: var(--muted); text-transform: capitalize; border: 1px solid var(--border); }
 
-        .share-card { margin-bottom: 16px; border-radius: 8px; padding: 20px; background: var(--surface); border: 1px solid var(--border); }
-        .share-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+        .share-card { margin-bottom: 16px; border-radius: 8px; padding: 24px; background: var(--surface); border: 1px solid var(--border); text-align: center; }
+        .share-head { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 8px; }
         .share-head .icon { width: 18px; height: 18px; color: var(--green); }
-        .share-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--white); }
-        .share-desc { font-size: 13px; color: var(--muted); margin-bottom: 16px; line-height: 1.6; }
-        .share-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: stretch; }
-        .share-input-wrap { display: flex; align-items: center; flex: 1; min-width: 200px; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
-        .share-prefix { padding: 0 0 0 12px; font-size: 13px; color: var(--dim); white-space: nowrap; }
-        .share-input { flex: 1; background: transparent; border: none; outline: none; color: var(--white); font-size: 13px; padding: 10px 12px; font-family: 'Inter', sans-serif; }
-        .share-btn { font-size: 13px; font-weight: 600; padding: 10px 18px; border-radius: 6px; border: none; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
-        .share-btn.primary { background: var(--green); color: #000; }
-        .share-btn.primary:hover { background: #1ed760; }
-        .share-btn.primary:disabled { opacity: 0.5; cursor: default; }
-        .share-error { font-size: 12px; color: #ff6b6b; margin-top: 10px; }
+        .share-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; color: var(--white); }
+        .share-desc { font-size: 13px; color: var(--muted); margin-bottom: 18px; line-height: 1.6; max-width: 440px; margin-left: auto; margin-right: auto; }
+        .share-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: stretch; justify-content: center; max-width: 460px; margin: 0 auto; }
+        .share-input-wrap { display: flex; align-items: center; flex: 1; min-width: 180px; background: var(--surface2); border: 1px solid var(--border); border-radius: 100px; overflow: hidden; transition: border-color 0.15s; }
+        .share-input-wrap:focus-within { border-color: var(--green); }
+        .share-prefix { padding: 0 0 0 16px; font-size: 13px; color: var(--dim); white-space: nowrap; }
+        .share-input { flex: 1; background: transparent; border: none; outline: none; color: var(--white); font-size: 13px; padding: 12px 14px; font-family: 'Inter', sans-serif; }
+        .share-btn { font-size: 13px; font-weight: 700; padding: 12px 24px; border-radius: 100px; border: none; cursor: pointer; transition: background 0.15s, transform 0.1s; white-space: nowrap; background: var(--green); color: #000; }
+        .share-btn:hover:not(:disabled) { background: #1ed760; }
+        .share-btn:active:not(:disabled) { transform: scale(0.97); }
+        .share-btn:disabled { opacity: 0.5; cursor: default; }
+        .share-error { font-size: 12px; color: #ff6b6b; margin-top: 12px; }
 
-        .share-live { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-        .share-status { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--muted); }
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); flex-shrink: 0; }
-        .status-dot.on { background: var(--green); }
-        .share-link-row { display: flex; align-items: center; gap: 8px; }
+        .share-live { margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; gap: 12px; }
+        .share-link-row { display: flex; align-items: center; gap: 8px; background: var(--surface2); border: 1px solid var(--border); border-radius: 100px; padding: 8px 8px 8px 16px; max-width: 100%; }
         .share-link { font-size: 13px; color: var(--green); text-decoration: none; word-break: break-all; }
-        .icon-btn { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--muted); flex-shrink: 0; transition: all 0.15s; }
+        .icon-btn { background: var(--bg); border: 1px solid var(--border); border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--muted); flex-shrink: 0; transition: color 0.15s, border-color 0.15s, transform 0.1s; }
         .icon-btn:hover { color: var(--white); border-color: var(--muted); }
+        .icon-btn:active { transform: scale(0.92); }
         .icon-btn .icon { width: 15px; height: 15px; }
-        .toggle-btn { position: relative; width: 40px; height: 22px; border-radius: 100px; background: var(--surface2); border: 1px solid var(--border); cursor: pointer; flex-shrink: 0; transition: background 0.2s; padding: 0; }
-        .toggle-btn.on { background: var(--green); border-color: var(--green); }
-        .toggle-btn::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--white); transition: transform 0.2s; }
-        .toggle-btn.on::after { transform: translateX(18px); }
+        .live-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--green); font-weight: 600; }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+        .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; gap: 12px; align-items: center; transition: border-color 0.15s; }
+        .stat-card:hover { border-color: var(--muted); }
+        .stat-art, .stat-art-placeholder { width: 48px; height: 48px; border-radius: 6px; object-fit: cover; flex-shrink: 0; background: var(--surface2); }
+        .stat-art-placeholder { display: flex; align-items: center; justify-content: center; color: var(--dim); }
+        .stat-info { flex: 1; min-width: 0; }
+        .stat-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--dim); font-weight: 600; margin-bottom: 4px; }
+        .stat-name { font-size: 13px; font-weight: 600; color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
+        .stat-sub { font-size: 12px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         .dash-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 16px; }
 
         .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
         .card-header { padding: 16px 20px 0; }
         .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); }
-        .tab { padding: 10px 4px; font-size: 13px; font-weight: 600; color: var(--dim); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; margin-right: 20px; transition: all 0.15s; }
+        .tab { padding: 10px 4px; font-size: 13px; font-weight: 600; color: var(--dim); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; margin-right: 20px; transition: color 0.15s, border-color 0.15s; background: none; user-select: none; }
         .tab:hover { color: var(--muted); }
         .tab.active { color: var(--white); border-color: var(--green); }
+        .tab:active { color: var(--green); }
 
         .track-list, .artist-list { padding: 6px 0; }
         .track-row, .artist-row { display: flex; align-items: center; gap: 12px; padding: 9px 20px; transition: background 0.1s; }
@@ -306,7 +285,8 @@ export default function Dashboard() {
           .personality-card { flex-direction: column; align-items: flex-start; gap: 10px; }
           .share-row { flex-direction: column; }
           .share-input-wrap { min-width: 0; }
-          .share-live { flex-direction: column; align-items: flex-start; }
+          .stats-grid { grid-template-columns: 1fr; }
+          .share-link-row { flex-wrap: wrap; justify-content: center; }
         }
       `}</style>
 
@@ -377,61 +357,104 @@ export default function Dashboard() {
           <div className="share-card">
             <div className="share-head">
               <Icon.link className="icon" />
-              <span className="share-title">Share your stats</span>
-            </div>
-            <p className="share-desc">
-              Publish a public profile link so anyone can view your live listening stats — current track, top tracks, top artists, and recent history — without signing in.
-            </p>
-
-            <div className="share-row">
-              <div className="share-input-wrap">
-                <span className="share-prefix">aura.app/u/</span>
-                <input
-                  className="share-input"
-                  type="text"
-                  placeholder="yourname"
-                  value={username}
-                  disabled={!!savedUsername}
-                  onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ''))}
-                  maxLength={24}
-                />
-              </div>
-              {!savedUsername && (
-                <button className="share-btn primary" onClick={saveUsername} disabled={shareLoading || !username.trim()}>
-                  {shareLoading ? 'Saving…' : 'Claim link'}
-                </button>
-              )}
+              <span className="share-title">Create your stats profile</span>
             </div>
 
-            {shareError && <div className="share-error">{shareError}</div>}
-
-            {savedUsername && (
-              <div className="share-live">
-                <div className="share-status">
-                  <span className={`status-dot ${isPublic ? 'on' : ''}`} />
-                  {isPublic ? 'Profile is public' : 'Profile is private'}
-                  <button
-                    className={`toggle-btn ${isPublic ? 'on' : ''}`}
-                    role="switch"
-                    aria-checked={isPublic}
-                    onClick={togglePublic}
-                    disabled={shareLoading}
-                  />
-                </div>
-
-                {isPublic && (
-                  <div className="share-link-row">
-                    <Icon.globe className="icon" style={{ width: 14, height: 14, color: 'var(--green)' }} />
-                    <a className="share-link" href={`/u/${savedUsername}`} target="_blank" rel="noreferrer">
-                      {shareUrl || `/u/${savedUsername}`}
-                    </a>
-                    <button className="icon-btn" onClick={copyLink} title="Copy link">
-                      {copied ? <Icon.check className="icon" /> : <Icon.copy className="icon" />}
-                    </button>
+            {!savedUsername ? (
+              <>
+                <p className="share-desc">
+                  Pick a name and get a link anyone can open to see your live listening stats — no login needed.
+                </p>
+                <div className="share-row">
+                  <div className="share-input-wrap">
+                    <span className="share-prefix">aura.app/u/</span>
+                    <input
+                      className="share-input"
+                      type="text"
+                      placeholder="yourname"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ''))}
+                      maxLength={24}
+                    />
                   </div>
-                )}
+                  <button className="share-btn" onClick={saveUsername} disabled={shareLoading || !username.trim()}>
+                    {shareLoading ? 'Creating…' : 'Create link'}
+                  </button>
+                </div>
+                {shareError && <div className="share-error">{shareError}</div>}
+              </>
+            ) : (
+              <div className="share-live">
+                <span className="live-badge"><Icon.globe className="icon" style={{ width: 13, height: 13 }} /> Live and public</span>
+                <div className="share-link-row">
+                  <a className="share-link" href={`/u/${savedUsername}`} target="_blank" rel="noreferrer">
+                    {shareUrl || `/u/${savedUsername}`}
+                  </a>
+                  <button className="icon-btn" onClick={copyLink} title="Copy link">
+                    {copied ? <Icon.check className="icon" /> : <Icon.copy className="icon" />}
+                  </button>
+                </div>
               </div>
             )}
+          </div>
+
+          <div className="stats-grid">
+            <div className="stat-card">
+              {data?.allTimeFavTrack?.album?.images?.[2]?.url ? (
+                <img className="stat-art" src={data.allTimeFavTrack.album.images[2].url} alt={data.allTimeFavTrack.name} />
+              ) : (
+                <div className="stat-art-placeholder"><Icon.music style={{ width: 18, height: 18 }} /></div>
+              )}
+              <div className="stat-info">
+                <div className="stat-label">All-Time Favorite</div>
+                <div className="stat-name">{data?.allTimeFavTrack?.name || 'Not enough data yet'}</div>
+                <div className="stat-sub">{data?.allTimeFavTrack?.artists?.map(a => a.name).join(', ') || '—'}</div>
+              </div>
+            </div>
+
+            <div className="stat-card">
+              {data?.allTimeFavArtist?.images?.[2]?.url ? (
+                <img className="stat-art" src={data.allTimeFavArtist.images[2].url} alt={data.allTimeFavArtist.name} style={{ borderRadius: '50%' }} />
+              ) : (
+                <div className="stat-art-placeholder" style={{ borderRadius: '50%' }}><Icon.music style={{ width: 18, height: 18 }} /></div>
+              )}
+              <div className="stat-info">
+                <div className="stat-label">Most Played Artist</div>
+                <div className="stat-name">{data?.allTimeFavArtist?.name || 'Not enough data yet'}</div>
+                <div className="stat-sub">{data?.allTimeFavArtist?.genres?.slice(0, 2).join(', ') || '—'}</div>
+              </div>
+            </div>
+
+            <div className="stat-card">
+              {data?.oldestRecent?.track?.album?.images?.[2]?.url ? (
+                <img className="stat-art" src={data.oldestRecent.track.album.images[2].url} alt={data.oldestRecent.track.name} />
+              ) : (
+                <div className="stat-art-placeholder"><Icon.music style={{ width: 18, height: 18 }} /></div>
+              )}
+              <div className="stat-info">
+                <div className="stat-label">Earliest in History</div>
+                <div className="stat-name">{data?.oldestRecent?.track?.name || 'No history yet'}</div>
+                <div className="stat-sub">{data?.oldestRecent ? timeAgo(data.oldestRecent.played_at) : '—'}</div>
+              </div>
+            </div>
+
+            <div className="stat-card">
+              <div className="stat-art-placeholder"><Icon.music style={{ width: 18, height: 18 }} /></div>
+              <div className="stat-info">
+                <div className="stat-label">Recent Listening</div>
+                <div className="stat-name">{data?.recentMinutes ?? '—'} minutes</div>
+                <div className="stat-sub">across last 50 plays</div>
+              </div>
+            </div>
+
+            <div className="stat-card">
+              <div className="stat-art-placeholder"><Icon.music style={{ width: 18, height: 18 }} /></div>
+              <div className="stat-info">
+                <div className="stat-label">Taste Profile</div>
+                <div className="stat-name">{data?.avgPopularity != null ? `${data.avgPopularity}% mainstream` : '—'}</div>
+                <div className="stat-sub">based on top tracks' popularity</div>
+              </div>
+            </div>
           </div>
 
           <div className="dash-grid">
