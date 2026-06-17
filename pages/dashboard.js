@@ -71,7 +71,26 @@ const Icon = {
       <polyline points="20 6 9 17 4 12" />
     </svg>
   ),
+  playlist: (p) => (
+    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" />
+      <line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" />
+    </svg>
+  ),
+  external: (p) => (
+    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" />
+    </svg>
+  ),
 };
+
+function WaveBars({ playing }) {
+  return (
+    <div className={`wave ${playing ? 'playing' : ''}`}>
+      {[0, 1, 2, 3, 4].map((i) => <span key={i} style={{ animationDelay: `${i * 0.12}s` }} />)}
+    </div>
+  );
+}
 
 export default function Dashboard() {
   const [data, setData] = useState(null);
@@ -164,6 +183,11 @@ export default function Dashboard() {
         html, body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; }
 
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes vinylspin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes pulsering { 0% { box-shadow: 0 0 0 0 rgba(29, 185, 84, 0.45); } 100% { box-shadow: 0 0 0 14px rgba(29, 185, 84, 0); } }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        @keyframes wavebar { 0%, 100% { transform: scaleY(0.3); } 50% { transform: scaleY(1); } }
 
         .loader { display: flex; align-items: center; justify-content: center; min-height: 100vh; flex-direction: column; gap: 16px; }
         .loader-ring { width: 40px; height: 40px; border: 3px solid var(--surface2); border-top-color: var(--green); border-radius: 50%; animation: spin 0.8s linear infinite; }
@@ -184,17 +208,55 @@ export default function Dashboard() {
         .now-playing {
           margin: 16px 0; background: var(--surface); border: 1px solid var(--border);
           border-radius: 8px; padding: 20px; display: flex; align-items: center; gap: 20px;
+          animation: fadeUp 0.5s ease-out;
         }
-        .np-art, .np-art-placeholder { width: 72px; height: 72px; border-radius: 6px; object-fit: cover; flex-shrink: 0; background: var(--surface2); }
-        .np-art-placeholder { display: flex; align-items: center; justify-content: center; color: var(--dim); }
+        .np-art-wrap { position: relative; flex-shrink: 0; width: 72px; height: 72px; }
+        .np-art, .np-art-placeholder { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; background: var(--surface2); }
+        .np-art-placeholder { display: flex; align-items: center; justify-content: center; color: var(--dim); border-radius: 6px; }
+        .np-art.spinning { animation: vinylspin 6s linear infinite; }
+        .np-art-wrap.live::before { content: ''; position: absolute; inset: -4px; border-radius: 50%; animation: pulsering 1.8s ease-out infinite; }
+        .np-art-hole { position: absolute; top: 50%; left: 50%; width: 10px; height: 10px; border-radius: 50%; background: var(--bg); border: 1px solid var(--border); transform: translate(-50%, -50%); pointer-events: none; }
         .np-info { flex: 1; min-width: 0; }
         .np-label { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--dim); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; font-weight: 600; }
         .np-label.live { color: var(--green); }
-        .np-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
+        .np-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: pulsering 1.6s ease-out infinite; }
         .np-track { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 18px; color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
         .np-artist { font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .np-duration { font-size: 12px; color: var(--dim); font-variant-numeric: tabular-nums; flex-shrink: 0; }
         .np-idle .np-track { color: var(--muted); font-weight: 600; }
+
+        .wave { display: flex; align-items: center; gap: 3px; height: 18px; flex-shrink: 0; }
+        .wave span { width: 3px; height: 100%; background: var(--green); border-radius: 2px; transform: scaleY(0.3); opacity: 0.5; }
+        .wave.playing span { animation: wavebar 0.9s ease-in-out infinite; opacity: 1; }
+
+        .daily-card {
+          margin-bottom: 16px; border-radius: 10px; padding: 18px; position: relative; overflow: hidden;
+          background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%);
+          border: 1px solid var(--border); display: flex; align-items: center; gap: 16px;
+          animation: fadeUp 0.5s ease-out 0.1s backwards;
+          transition: transform 0.2s, border-color 0.2s;
+        }
+        .daily-card:hover { transform: translateY(-2px); border-color: var(--green); }
+        .daily-card::before {
+          content: ''; position: absolute; inset: 0;
+          background: linear-gradient(100deg, transparent 30%, rgba(255,255,255,0.05) 50%, transparent 70%);
+          background-size: 200% 100%; animation: shimmer 3.5s linear infinite;
+        }
+        .daily-art-wrap { position: relative; width: 60px; height: 60px; border-radius: 8px; flex-shrink: 0; overflow: hidden; box-shadow: 0 6px 18px rgba(0,0,0,0.4); }
+        .daily-art, .daily-art-placeholder { width: 100%; height: 100%; object-fit: cover; background: var(--green); }
+        .daily-art-placeholder { display: flex; align-items: center; justify-content: center; color: rgba(0,0,0,0.5); }
+        .daily-info { flex: 1; min-width: 0; position: relative; z-index: 1; }
+        .daily-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--green); font-weight: 700; margin-bottom: 4px; }
+        .daily-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 800; color: var(--white); margin-bottom: 2px; }
+        .daily-sub { font-size: 12px; color: var(--dim); }
+        .daily-btn {
+          flex-shrink: 0; background: var(--green); color: #000; border: none; border-radius: 100px;
+          padding: 10px 18px; font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: none;
+          display: inline-flex; align-items: center; gap: 6px; position: relative; z-index: 1;
+          transition: transform 0.1s;
+        }
+        .daily-btn:hover { transform: scale(1.04); }
+        .daily-btn:active { transform: scale(0.96); }
 
         .personality-card {
           margin-bottom: 16px; border-radius: 8px; padding: 16px 20px;
@@ -232,7 +294,8 @@ export default function Dashboard() {
         .live-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--green); font-weight: 600; }
 
         .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
-        .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; gap: 12px; align-items: center; transition: border-color 0.15s; }
+        .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; gap: 12px; align-items: center; transition: border-color 0.15s, transform 0.15s; animation: fadeUp 0.4s ease-out backwards; }
+        .stat-card:hover { transform: translateY(-2px); }
         .stat-card:hover { border-color: var(--muted); }
         .stat-art, .stat-art-placeholder { width: 48px; height: 48px; border-radius: 6px; object-fit: cover; flex-shrink: 0; background: var(--surface2); }
         .stat-art-placeholder { display: flex; align-items: center; justify-content: center; color: var(--dim); }
@@ -278,15 +341,20 @@ export default function Dashboard() {
         @media (max-width: 768px) {
           .dash { padding: 0 14px 40px; }
           .now-playing { gap: 14px; padding: 16px; }
-          .np-art, .np-art-placeholder { width: 56px; height: 56px; }
+          .np-art-wrap, .np-art, .np-art-placeholder { width: 56px; height: 56px; }
           .np-track { font-size: 15px; }
           .np-duration { display: none; }
+          .wave { display: none; }
           .dash-grid { grid-template-columns: 1fr; }
           .personality-card { flex-direction: column; align-items: flex-start; gap: 10px; }
           .share-row { flex-direction: column; }
           .share-input-wrap { min-width: 0; }
           .stats-grid { grid-template-columns: 1fr; }
           .share-link-row { flex-wrap: wrap; justify-content: center; }
+          .daily-card { padding: 14px; gap: 12px; }
+          .daily-art-wrap { width: 48px; height: 48px; }
+          .daily-title { font-size: 13px; }
+          .daily-btn { padding: 9px 14px; font-size: 12px; }
         }
       `}</style>
 
@@ -313,11 +381,14 @@ export default function Dashboard() {
           </nav>
 
           <div className={`now-playing ${!data?.isPlaying ? 'np-idle' : ''}`}>
-            {data?.nowPlaying?.album?.images?.[0]?.url ? (
-              <img className="np-art" src={data.nowPlaying.album.images[0].url} alt="Album art" />
-            ) : (
-              <div className="np-art-placeholder"><Icon.music style={{ width: 24, height: 24 }} /></div>
-            )}
+            <div className={`np-art-wrap ${data?.isPlaying ? 'live' : ''}`}>
+              {data?.nowPlaying?.album?.images?.[0]?.url ? (
+                <img className={`np-art ${data?.isPlaying ? 'spinning' : ''}`} src={data.nowPlaying.album.images[0].url} alt="Album art" />
+              ) : (
+                <div className="np-art-placeholder"><Icon.music style={{ width: 24, height: 24 }} /></div>
+              )}
+              {data?.isPlaying && data?.nowPlaying?.album?.images?.[0]?.url && <span className="np-art-hole" />}
+            </div>
             <div className="np-info">
               <div className={`np-label ${data?.isPlaying ? 'live' : ''}`}>
                 {data?.isPlaying ? <><span className="np-dot" /> Now Playing</> : 'Last Played'}
@@ -333,10 +404,31 @@ export default function Dashboard() {
                 </div>
               )}
             </div>
+            {data?.isPlaying && <WaveBars playing />}
             {data?.nowPlaying?.duration_ms && (
               <span className="np-duration">{msToTime(data.nowPlaying.duration_ms)}</span>
             )}
           </div>
+
+          {data?.dailyPlaylist?.url && (
+            <div className="daily-card">
+              <div className="daily-art-wrap">
+                {data.dailyPlaylist.image ? (
+                  <img className="daily-art" src={data.dailyPlaylist.image} alt="Daily playlist cover" />
+                ) : (
+                  <div className="daily-art-placeholder"><Icon.playlist style={{ width: 20, height: 20 }} /></div>
+                )}
+              </div>
+              <div className="daily-info">
+                <div className="daily-label">Updated Today</div>
+                <div className="daily-title">Aura Daily</div>
+                <div className="daily-sub">Auto-built from your top tracks, refreshed daily</div>
+              </div>
+              <a className="daily-btn" href={data.dailyPlaylist.url} target="_blank" rel="noreferrer">
+                Open <Icon.external style={{ width: 14, height: 14 }} />
+              </a>
+            </div>
+          )}
 
           {personality && (
             <div className="personality-card">
