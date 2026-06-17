@@ -1,5 +1,6 @@
 import { spotifyFetch, refreshAccessToken } from '../../lib/spotify';
 import { upsertUser, getBySpotifyId } from '../../lib/store';
+import { ensureDailyPlaylist } from '../../lib/dailyPlaylist';
 
 function parseCookies(cookieHeader) {
   const cookies = {};
@@ -88,6 +89,14 @@ export default async function handler(req, res) {
       shareInfo = { username: saved?.username || null };
     }
 
+    // Refresh the user's "Aura Daily" playlist at most once per day. This
+    // runs opportunistically on dashboard load since there's no cron job.
+    let dailyPlaylist = null;
+    if (me?.id) {
+      const combinedTracks = [...(topTracks?.items || []), ...(topTracksLong?.items || [])];
+      dailyPlaylist = await ensureDailyPlaylist(me.id, access_token, combinedTracks);
+    }
+
     res.json({
       me,
       nowPlaying: nowPlaying?.item || null,
@@ -101,6 +110,7 @@ export default async function handler(req, res) {
       oldestRecent: oldestRecent || null,
       recentMinutes,
       avgPopularity,
+      dailyPlaylist,
       share: shareInfo,
     });
   } catch (err) {
