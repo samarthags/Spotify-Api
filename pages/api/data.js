@@ -33,12 +33,14 @@ export default async function handler(req, res) {
   }
 
   try {
-    const [me, nowPlaying, topTracks, topArtists, recentlyPlayed] = await Promise.all([
+    const [me, nowPlaying, topTracks, topArtists, recentlyPlayed, topTracksLong, topArtistsLong] = await Promise.all([
       spotifyFetch('/me', access_token),
       spotifyFetch('/me/player/currently-playing', access_token),
       spotifyFetch('/me/top/tracks?limit=10&time_range=short_term', access_token),
       spotifyFetch('/me/top/artists?limit=8&time_range=short_term', access_token),
-      spotifyFetch('/me/player/recently-played?limit=10', access_token),
+      spotifyFetch('/me/player/recently-played?limit=50', access_token),
+      spotifyFetch('/me/top/tracks?limit=5&time_range=long_term', access_token),
+      spotifyFetch('/me/top/artists?limit=5&time_range=long_term', access_token),
     ]);
 
     // Compute music personality based on top genres
@@ -55,19 +57,35 @@ export default async function handler(req, res) {
       .slice(0, 5)
       .map(([g]) => g);
 
+    // Oldest item in recently-played history (closest available proxy for
+    // "first listened" — Spotify only exposes a rolling recent window).
+    const recentItems = recentlyPlayed?.items || [];
+    const oldestRecent = recentItems.length
+      ? recentItems.reduce((a, b) => (new Date(a.played_at) < new Date(b.played_at) ? a : b))
+      : null;
+
+    // Rough "minutes listened" estimate from the visible recent-history window.
+    const recentMinutes = Math.round(
+      recentItems.reduce((sum, item) => sum + (item.track?.duration_ms || 0), 0) / 60000
+    );
+
+    // Average popularity of top tracks as a simple "mainstream vs niche" signal.
+    const popList = (topTracks?.items || []).map((t) => t.popularity).filter((n) => typeof n === 'number');
+    const avgPopularity = popList.length ? Math.round(popList.reduce((a, b) => a + b, 0) / popList.length) : null;
+
     // Persist refresh token + profile basics so a public, no-login profile
     // page can be served for this user if they choose to publish it.
     let shareInfo = null;
     if (me?.id && refresh_token) {
-      const existing = getBySpotifyId(me.id);
-      const saved = upsertUser(me.id, {
+      const existing = await getBySpotifyId(me.id);
+      const saved = await upsertUser(me.id, {
         refreshToken: refresh_token,
         displayName: me.display_name || null,
         avatar: me.images?.[0]?.url || null,
         username: existing?.username || null,
-        isPublic: existing?.isPublic || false,
+        isPublic: existing ? existing.isPublic : true,
       });
-      shareInfo = { username: saved.username, isPublic: saved.isPublic };
+      shareInfo = { username: saved?.username || null };
     }
 
     res.json({
@@ -76,8 +94,13 @@ export default async function handler(req, res) {
       isPlaying: nowPlaying?.is_playing || false,
       topTracks: topTracks?.items || [],
       topArtists: topArtists?.items || [],
-      recentlyPlayed: recentlyPlayed?.items || [],
+      recentlyPlayed: recentItems.slice(0, 10),
       topGenres,
+      allTimeFavTrack: topTracksLong?.items?.[0] || null,
+      allTimeFavArtist: topArtistsLong?.items?.[0] || null,
+      oldestRecent: oldestRecent || null,
+      recentMinutes,
+      avgPopularity,
       share: shareInfo,
     });
   } catch (err) {
