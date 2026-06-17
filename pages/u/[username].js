@@ -46,6 +46,12 @@ function pickDuotone(seed) {
   return DUOTONES[Math.abs(hash) % DUOTONES.length];
 }
 
+function hexToRgb(hex) {
+  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (!m) return '29, 185, 84';
+  return `${parseInt(m[1], 16)}, ${parseInt(m[2], 16)}, ${parseInt(m[3], 16)}`;
+}
+
 const Icon = {
   music: (p) => (
     <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
@@ -71,6 +77,17 @@ const Icon = {
   spark: (p) => (
     <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
       <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+    </svg>
+  ),
+  playlist: (p) => (
+    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" />
+      <line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" />
+    </svg>
+  ),
+  external: (p) => (
+    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" />
     </svg>
   ),
 };
@@ -150,6 +167,7 @@ export default function PublicProfile() {
 
   const personality = data ? getPersonality(data.topGenres) : null;
   const [accent, accentDark] = pickDuotone(typeof username === 'string' ? username : 'aura');
+  const accentRgb = hexToRgb(accent);
 
   return (
     <>
@@ -169,12 +187,17 @@ export default function PublicProfile() {
           --bg: #0a0a0a; --surface: #121212; --surface2: #1a1a1a;
           --border: #232323; --green: #1DB954;
           --white: #fff; --muted: #a0a0a0; --dim: #6a6a6a; --text: #e6e6e6;
-          --accent: ${accent}; --accent-dark: ${accentDark};
+          --accent: ${accent}; --accent-dark: ${accentDark}; --accent-rgb: ${accentRgb};
         }
         html, body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; }
 
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @keyframes wavebar { 0%, 100% { transform: scaleY(0.3); } 50% { transform: scaleY(1); } }
+        @keyframes vinylspin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes pulsering { 0% { box-shadow: 0 0 0 0 rgba(var(--accent-rgb), 0.45); } 100% { box-shadow: 0 0 0 14px rgba(var(--accent-rgb), 0); } }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        @keyframes heroGradient { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
 
         .loader, .notfound { display: flex; align-items: center; justify-content: center; min-height: 100vh; flex-direction: column; gap: 16px; text-align: center; padding: 24px; }
         .loader-ring { width: 40px; height: 40px; border: 3px solid var(--surface2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
@@ -183,17 +206,19 @@ export default function PublicProfile() {
 
         .wrap { max-width: 780px; margin: 0 auto; padding: 0 0 60px; }
 
-        /* DUOTONE HERO — Blend-style */
+        /* DUOTONE HERO — Blend-style, slow animated gradient */
         .hero {
           position: relative; overflow: hidden;
-          background: linear-gradient(160deg, var(--accent) 0%, var(--accent-dark) 55%, #0a0a0a 100%);
+          background: linear-gradient(120deg, var(--accent-dark) 0%, var(--accent) 45%, var(--accent-dark) 100%);
+          background-size: 200% 200%;
+          animation: heroGradient 10s ease-in-out infinite;
           padding: 48px 24px 64px; margin-bottom: -36px;
         }
         .hero::after {
           content: ''; position: absolute; inset: 0;
-          background: radial-gradient(circle at 70% 0%, rgba(255,255,255,0.12), transparent 60%);
+          background: radial-gradient(circle at 70% 0%, rgba(255,255,255,0.14), transparent 60%);
         }
-        .hero-inner { position: relative; max-width: 780px; margin: 0 auto; }
+        .hero-inner { position: relative; max-width: 780px; margin: 0 auto; animation: fadeUp 0.5s ease-out; }
         .hero-tag { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.75); font-weight: 700; margin-bottom: 16px; }
         .hero-head { display: flex; align-items: center; gap: 16px; }
         .p-avatar, .p-avatar-placeholder { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; background: rgba(0,0,0,0.3); flex-shrink: 0; border: 2px solid rgba(255,255,255,0.3); }
@@ -202,18 +227,25 @@ export default function PublicProfile() {
         .p-personality { font-size: 13px; color: rgba(255,255,255,0.8); margin-top: 4px; font-weight: 500; }
 
         /* NOW PLAYING — floats over hero/body seam */
-        .now-playing-wrap { padding: 0 20px; position: relative; z-index: 2; }
+        .now-playing-wrap { padding: 0 20px; position: relative; z-index: 2; animation: fadeUp 0.5s ease-out 0.1s backwards; }
         .now-playing {
           background: var(--surface); border: 1px solid var(--border);
           border-radius: 12px; padding: 18px 20px; display: flex; align-items: center; gap: 16px;
           box-shadow: 0 12px 32px rgba(0,0,0,0.5);
         }
-        .np-art, .np-art-placeholder { width: 64px; height: 64px; border-radius: 8px; object-fit: cover; flex-shrink: 0; background: var(--surface2); }
-        .np-art-placeholder { display: flex; align-items: center; justify-content: center; color: var(--dim); }
+        .np-art-wrap { position: relative; flex-shrink: 0; width: 64px; height: 64px; }
+        .np-art, .np-art-placeholder { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; background: var(--surface2); }
+        .np-art-placeholder { display: flex; align-items: center; justify-content: center; color: var(--dim); border-radius: 8px; }
+        .np-art.spinning { animation: vinylspin 6s linear infinite; }
+        .np-art-wrap.live::before {
+          content: ''; position: absolute; inset: -4px; border-radius: 50%;
+          animation: pulsering 1.8s ease-out infinite;
+        }
+        .np-art-hole { position: absolute; top: 50%; left: 50%; width: 10px; height: 10px; border-radius: 50%; background: var(--bg); border: 1px solid rgba(255,255,255,0.15); transform: translate(-50%, -50%); pointer-events: none; }
         .np-info { flex: 1; min-width: 0; }
         .np-label { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--dim); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; font-weight: 600; }
         .np-label.live { color: var(--accent); }
-        .np-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+        .np-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); animation: pulsering 1.6s ease-out infinite; }
         .np-track { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px; color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
         .np-artist { font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .np-idle .np-track { color: var(--muted); font-weight: 600; }
@@ -230,12 +262,45 @@ export default function PublicProfile() {
 
         .body { padding: 56px 20px 0; }
 
+        /* DAILY PLAYLIST — shimmer + hover lift */
+        .daily-card {
+          margin-bottom: 16px; border-radius: 14px; padding: 18px; position: relative; overflow: hidden;
+          background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%);
+          border: 1px solid var(--border); display: flex; align-items: center; gap: 16px;
+          animation: fadeUp 0.5s ease-out 0.15s backwards;
+          transition: transform 0.2s, border-color 0.2s;
+        }
+        .daily-card:hover { transform: translateY(-2px); border-color: var(--accent); }
+        .daily-card::before {
+          content: ''; position: absolute; inset: 0;
+          background: linear-gradient(100deg, transparent 30%, rgba(255,255,255,0.06) 50%, transparent 70%);
+          background-size: 200% 100%; animation: shimmer 3.5s linear infinite;
+        }
+        .daily-art-wrap { position: relative; width: 64px; height: 64px; border-radius: 10px; flex-shrink: 0; overflow: hidden; box-shadow: 0 6px 18px rgba(0,0,0,0.4); }
+        .daily-art, .daily-art-placeholder { width: 100%; height: 100%; object-fit: cover; background: var(--accent); }
+        .daily-art-placeholder { display: flex; align-items: center; justify-content: center; color: rgba(0,0,0,0.5); }
+        .daily-info { flex: 1; min-width: 0; position: relative; z-index: 1; }
+        .daily-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent); font-weight: 700; margin-bottom: 4px; }
+        .daily-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 800; color: var(--white); margin-bottom: 2px; }
+        .daily-sub { font-size: 12px; color: var(--dim); }
+        .daily-btn {
+          flex-shrink: 0; background: var(--accent); color: #000; border: none; border-radius: 100px;
+          padding: 10px 18px; font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: none;
+          display: inline-flex; align-items: center; gap: 6px; position: relative; z-index: 1;
+          transition: transform 0.1s, background 0.15s;
+        }
+        .daily-btn:hover { transform: scale(1.04); }
+        .daily-btn:active { transform: scale(0.96); }
+
         /* STAT GRID — Blend-style big tiles */
         .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px; }
         .stat-tile {
           background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
           padding: 18px; position: relative; overflow: hidden;
+          animation: fadeUp 0.5s ease-out backwards;
+          transition: transform 0.2s, border-color 0.2s;
         }
+        .stat-tile:hover { transform: translateY(-3px); border-color: var(--accent); }
         .stat-tile.wide { grid-column: 1 / -1; display: flex; align-items: center; gap: 14px; }
         .stat-tile-icon { color: var(--accent); margin-bottom: 10px; }
         .stat-tile-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--dim); font-weight: 700; margin-bottom: 6px; }
@@ -254,13 +319,14 @@ export default function PublicProfile() {
         .personality-card {
           margin-bottom: 16px; border-radius: 12px; padding: 16px 20px;
           background: var(--surface); border: 1px solid var(--border);
+          animation: fadeUp 0.5s ease-out 0.05s backwards;
         }
         .p-label2 { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--dim); margin-bottom: 10px; font-weight: 600; }
         .p-genres { display: flex; gap: 8px; flex-wrap: wrap; }
         .p-genre { font-size: 11px; padding: 5px 12px; border-radius: 100px; background: var(--surface2); color: var(--white); text-transform: capitalize; border: 1px solid var(--border); }
         .p-genre:first-child { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 700; }
 
-        .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 16px; }
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 16px; animation: fadeUp 0.5s ease-out 0.2s backwards; }
         .card-header { padding: 16px 20px 0; }
         .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); }
         .tab { padding: 10px 4px; font-size: 13px; font-weight: 600; color: var(--dim); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; margin-right: 20px; transition: color 0.15s, border-color 0.15s; user-select: none; }
@@ -269,8 +335,8 @@ export default function PublicProfile() {
         .card-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: var(--white); margin-bottom: 12px; }
 
         .track-list, .artist-list, .recent-list { padding: 6px 0; }
-        .track-row, .artist-row, .recent-row { display: flex; align-items: center; gap: 12px; padding: 9px 20px; transition: background 0.1s; }
-        .track-row:hover, .artist-row:hover, .recent-row:hover { background: var(--surface2); }
+        .track-row, .artist-row, .recent-row { display: flex; align-items: center; gap: 12px; padding: 9px 20px; transition: background 0.15s, transform 0.15s; }
+        .track-row:hover, .artist-row:hover, .recent-row:hover { background: var(--surface2); transform: translateX(3px); }
         .track-num { font-size: 12px; color: var(--dim); width: 18px; text-align: center; font-variant-numeric: tabular-nums; flex-shrink: 0; }
         .track-art, .artist-img, .recent-art, .recent-art-placeholder { object-fit: cover; flex-shrink: 0; background: var(--surface2); }
         .track-art, .recent-art, .recent-art-placeholder { width: 38px; height: 38px; border-radius: 4px; }
@@ -292,8 +358,12 @@ export default function PublicProfile() {
           .p-name { font-size: 22px; }
           .now-playing-wrap, .body { padding-left: 14px; padding-right: 14px; }
           .now-playing { padding: 14px 16px; gap: 12px; }
-          .np-art, .np-art-placeholder { width: 52px; height: 52px; }
+          .np-art-wrap, .np-art, .np-art-placeholder { width: 52px; height: 52px; }
           .stats-grid { grid-template-columns: 1fr; }
+          .daily-card { padding: 14px; gap: 12px; }
+          .daily-art-wrap { width: 52px; height: 52px; }
+          .daily-title { font-size: 14px; }
+          .daily-btn { padding: 9px 14px; font-size: 12px; }
         }
       `}</style>
 
@@ -329,11 +399,14 @@ export default function PublicProfile() {
 
           <div className="now-playing-wrap">
             <div className={`now-playing ${!data?.isPlaying ? 'np-idle' : ''}`}>
-              {data?.nowPlaying?.album?.images?.[0]?.url ? (
-                <img className="np-art" src={data.nowPlaying.album.images[0].url} alt="Album art" />
-              ) : (
-                <div className="np-art-placeholder"><Icon.music style={{ width: 22, height: 22 }} /></div>
-              )}
+              <div className={`np-art-wrap ${data?.isPlaying ? 'live' : ''}`}>
+                {data?.nowPlaying?.album?.images?.[0]?.url ? (
+                  <img className={`np-art ${audioPlaying ? 'spinning' : ''}`} src={data.nowPlaying.album.images[0].url} alt="Album art" />
+                ) : (
+                  <div className="np-art-placeholder"><Icon.music style={{ width: 22, height: 22 }} /></div>
+                )}
+                {audioPlaying && data?.nowPlaying?.album?.images?.[0]?.url && <span className="np-art-hole" />}
+              </div>
               <div className="np-info">
                 <div className={`np-label ${data?.isPlaying ? 'live' : ''}`}>
                   {data?.isPlaying ? <><span className="np-dot" /> Now Playing</> : 'Last Played'}
@@ -358,6 +431,26 @@ export default function PublicProfile() {
           </div>
 
           <div className="body">
+            {data?.dailyPlaylist?.url && (
+              <div className="daily-card">
+                <div className="daily-art-wrap">
+                  {data.dailyPlaylist.image ? (
+                    <img className="daily-art" src={data.dailyPlaylist.image} alt="Daily playlist cover" />
+                  ) : (
+                    <div className="daily-art-placeholder"><Icon.playlist style={{ width: 22, height: 22 }} /></div>
+                  )}
+                </div>
+                <div className="daily-info">
+                  <div className="daily-label">Updated Today</div>
+                  <div className="daily-title">Aura Daily</div>
+                  <div className="daily-sub">Top tracks, refreshed every day</div>
+                </div>
+                <a className="daily-btn" href={data.dailyPlaylist.url} target="_blank" rel="noreferrer">
+                  Open <Icon.external style={{ width: 14, height: 14 }} />
+                </a>
+              </div>
+            )}
+
             {personality && data?.topGenres?.length > 0 && (
               <div className="personality-card">
                 <div className="p-label2">Top Genres</div>
@@ -368,14 +461,14 @@ export default function PublicProfile() {
             )}
 
             <div className="stats-grid">
-              <div className="stat-tile">
+              <div className="stat-tile" style={{ animationDelay: '0.05s' }}>
                 <div className="stat-tile-icon"><Icon.clock style={{ width: 20, height: 20 }} /></div>
                 <div className="stat-tile-label">Recent Listening</div>
                 <div className="stat-tile-value">{data?.recentMinutes ?? '—'} min</div>
                 <div className="stat-tile-sub">across last 50 plays</div>
               </div>
 
-              <div className="stat-tile">
+              <div className="stat-tile" style={{ animationDelay: '0.1s' }}>
                 <div className="stat-tile-icon"><Icon.spark style={{ width: 20, height: 20 }} /></div>
                 <div className="stat-tile-label">Taste Profile</div>
                 <div className="stat-tile-value">{data?.avgPopularity != null ? `${data.avgPopularity}%` : '—'}</div>
@@ -385,7 +478,7 @@ export default function PublicProfile() {
                 <div className="taste-label-row"><span>Niche</span><span>Mainstream</span></div>
               </div>
 
-              <div className="stat-tile wide">
+              <div className="stat-tile wide" style={{ animationDelay: '0.15s' }}>
                 {data?.allTimeFavTrack?.album?.images?.[2]?.url ? (
                   <img className="stat-art" src={data.allTimeFavTrack.album.images[2].url} alt={data.allTimeFavTrack.name} />
                 ) : (
@@ -398,7 +491,7 @@ export default function PublicProfile() {
                 </div>
               </div>
 
-              <div className="stat-tile wide">
+              <div className="stat-tile wide" style={{ animationDelay: '0.2s' }}>
                 {data?.allTimeFavArtist?.images?.[2]?.url ? (
                   <img className="stat-art" src={data.allTimeFavArtist.images[2].url} alt={data.allTimeFavArtist.name} style={{ borderRadius: '50%' }} />
                 ) : (
@@ -411,7 +504,7 @@ export default function PublicProfile() {
                 </div>
               </div>
 
-              <div className="stat-tile wide">
+              <div className="stat-tile wide" style={{ animationDelay: '0.25s' }}>
                 {data?.oldestRecent?.track?.album?.images?.[2]?.url ? (
                   <img className="stat-art" src={data.oldestRecent.track.album.images[2].url} alt={data.oldestRecent.track.name} />
                 ) : (
