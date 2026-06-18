@@ -14,10 +14,9 @@ const Icon = {
       <path d="M18 2H6v7a6 6 0 0 0 12 0V2z" />
     </svg>
   ),
-  share: (p) => (
+  code: (p) => (
     <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
-      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+      <polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" />
     </svg>
   ),
 };
@@ -26,8 +25,8 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>Aura — Your Spotify Stats</title>
-        <meta name="description" content="See your top tracks, top artists, and live listening activity. Share a public stats page with anyone — no login required." />
+        <title>Aura — Spotify Stats API</title>
+        <meta name="description" content="A permanent JSON API for your live Spotify stats — current track, top tracks, and top artists. Connect once, get an endpoint, embed it anywhere." />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="true" />
         <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -136,10 +135,10 @@ export default function Home() {
             <Icon.music style={{ width: 28, height: 28 }} />
           </div>
 
-          <p className="eyebrow">Spotify Stats</p>
-          <h1>Your music,<br />on display.</h1>
+          <p className="eyebrow">Spotify Stats API</p>
+          <h1>Your music,<br />as an API.</h1>
           <p className="subtitle">
-            See your current track, top artists, and listening history in a clean dashboard — then share a live public stats page with anyone, no login required.
+            Connect your Spotify account once and get a permanent JSON endpoint for your live listening data — current track, top tracks, top artists — ready to fetch from any website you build.
           </p>
           <div className="cta-group">
             <a href="/api/login" className="btn-primary">
@@ -148,7 +147,7 @@ export default function Home() {
               </svg>
               Connect Spotify
             </a>
-            <a href="#features" className="btn-secondary">See features</a>
+            <a href="#features" className="btn-secondary">See how it works</a>
           </div>
         </main>
 
@@ -156,17 +155,17 @@ export default function Home() {
           <div className="feature">
             <div className="feature-icon"><Icon.music style={{ width: 24, height: 24 }} /></div>
             <div className="feature-title">Now Playing</div>
-            <div className="feature-desc">See your current track with album art and live status, updating automatically.</div>
+            <div className="feature-desc">Your current track and play status, available live in the JSON response, updating automatically.</div>
           </div>
           <div className="feature">
             <div className="feature-icon"><Icon.trophy style={{ width: 24, height: 24 }} /></div>
             <div className="feature-title">Top Charts</div>
-            <div className="feature-desc">Your most played tracks and artists from the last 4 weeks, clearly ranked.</div>
+            <div className="feature-desc">Your most played tracks and artists from the last 4 weeks, included in every request.</div>
           </div>
           <div className="feature">
-            <div className="feature-icon"><Icon.share style={{ width: 24, height: 24 }} /></div>
-            <div className="feature-title">Public Sharing</div>
-            <div className="feature-desc">Publish a link to your live stats. Anyone can view it instantly — no account needed.</div>
+            <div className="feature-icon"><Icon.code style={{ width: 24, height: 24 }} /></div>
+            <div className="feature-title">One Permanent Endpoint</div>
+            <div className="feature-desc">A single unique URL, generated once at login. No API key header, no expiring tokens — just fetch it from any frontend.</div>
           </div>
         </section>
 
