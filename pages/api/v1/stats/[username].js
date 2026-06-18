@@ -64,17 +64,15 @@ export default async function handler(req, res) {
   }
 
   try {
-    const [nowPlaying, topTracksShort, topArtistsShort, topTracksLong, topArtistsLong] = await Promise.all([
+    const [nowPlaying, topTracksShort, topArtistsShort, recentlyPlayed] = await Promise.all([
       spotifyFetch('/me/player/currently-playing', access_token),
       spotifyFetch('/me/top/tracks?limit=5&time_range=short_term', access_token),
       spotifyFetch('/me/top/artists?limit=5&time_range=short_term', access_token),
-      spotifyFetch('/me/top/tracks?limit=1&time_range=long_term', access_token),
-      spotifyFetch('/me/top/artists?limit=1&time_range=long_term', access_token),
+      spotifyFetch('/me/player/recently-played?limit=1', access_token),
     ]);
 
     const current = nowPlaying?.item || null;
-    const favTrack = topTracksLong?.items?.[0] || null;
-    const favArtist = topArtistsLong?.items?.[0] || null;
+    const lastPlayed = recentlyPlayed?.items?.[0]?.track || null;
 
     const payload = {
       username: record.username,
@@ -92,28 +90,23 @@ export default async function handler(req, res) {
         spotifyUrl: current?.external_urls?.spotify || null,
       },
 
-      favoriteSong: favTrack ? {
-        track: favTrack.name,
-        artist: formatArtists(favTrack.artists),
-        albumArt: favTrack.album?.images?.[0]?.url || null,
-        spotifyUrl: favTrack.external_urls?.spotify || null,
+      // Only populated when nothing is currently playing — the most
+      // recently played track as a fallback.
+      recentlyPlayed: (!nowPlaying?.is_playing && lastPlayed) ? {
+        track: lastPlayed.name,
+        artist: formatArtists(lastPlayed.artists),
+        albumArt: lastPlayed.album?.images?.[0]?.url || null,
+        spotifyUrl: lastPlayed.external_urls?.spotify || null,
       } : null,
 
-      topArtist: favArtist ? {
-        name: favArtist.name,
-        genres: favArtist.genres || [],
-        image: favArtist.images?.[0]?.url || null,
-        spotifyUrl: favArtist.external_urls?.spotify || null,
-      } : null,
-
-      topTracksThisMonth: (topTracksShort?.items || []).map((t) => ({
+      topTracks: (topTracksShort?.items || []).map((t) => ({
         track: t.name,
         artist: formatArtists(t.artists),
         albumArt: t.album?.images?.[0]?.url || null,
         spotifyUrl: t.external_urls?.spotify || null,
       })),
 
-      topArtistsThisMonth: (topArtistsShort?.items || []).map((a) => ({
+      topArtists: (topArtistsShort?.items || []).map((a) => ({
         name: a.name,
         image: a.images?.[0]?.url || null,
         spotifyUrl: a.external_urls?.spotify || null,
