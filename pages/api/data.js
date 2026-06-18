@@ -1,6 +1,7 @@
 import { spotifyFetch, refreshAccessToken } from '../../lib/spotify';
 import { upsertUser, getBySpotifyId } from '../../lib/store';
 import { ensureDailyPlaylist } from '../../lib/dailyPlaylist';
+import { nanoid } from 'nanoid';
 
 function parseCookies(cookieHeader) {
   const cookies = {};
@@ -75,18 +76,21 @@ export default async function handler(req, res) {
     const avgPopularity = popList.length ? Math.round(popList.reduce((a, b) => a + b, 0) / popList.length) : null;
 
     // Persist refresh token + profile basics so a public, no-login profile
-    // page can be served for this user if they choose to publish it.
-    let shareInfo = null;
+    // page / API endpoint can be served for this user. Auto-generate a
+    // permanent public apiId on first login if one doesn't exist yet.
+    let apiId = null;
     if (me?.id && refresh_token) {
       const existing = await getBySpotifyId(me.id);
-      const saved = await upsertUser(me.id, {
+      apiId = existing?.apiId || nanoid(10);
+
+      await upsertUser(me.id, {
         refreshToken: refresh_token,
         displayName: me.display_name || null,
         avatar: me.images?.[0]?.url || null,
         username: existing?.username || null,
         isPublic: existing ? existing.isPublic : true,
+        apiId,
       });
-      shareInfo = { username: saved?.username || null };
     }
 
     // Refresh the user's "Aura Daily" playlist at most once per day. This
@@ -99,6 +103,7 @@ export default async function handler(req, res) {
 
     res.json({
       me,
+      apiId,
       nowPlaying: nowPlaying?.item || null,
       isPlaying: nowPlaying?.is_playing || false,
       topTracks: topTracks?.items || [],
@@ -111,7 +116,6 @@ export default async function handler(req, res) {
       recentMinutes,
       avgPopularity,
       dailyPlaylist,
-      share: shareInfo,
     });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch Spotify data', details: err.message });
