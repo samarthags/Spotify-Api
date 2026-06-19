@@ -1,5 +1,4 @@
-
-import { spotifyFetch, refreshAccessToken } from '../../../../lib/spotify';
+import { spotifyFetch, refreshAccessToken, getCanvasUrl } from '../../../../lib/spotify';
 import { getByApiId, upsertUser } from '../../../../lib/store';
 
 function setCors(res) {
@@ -57,6 +56,12 @@ export default async function handler(req, res) {
     const current = nowPlaying?.item || null;
     const lastPlayed = recentlyPlayed?.items?.[0]?.track || null;
 
+    // Fetch canvas only when a track is actively playing
+    let canvasUrl = null;
+    if (nowPlaying?.is_playing && current?.uri) {
+      canvasUrl = await getCanvasUrl(current.uri, access_token);
+    }
+
     const payload = {
       displayName: record.displayName,
 
@@ -69,10 +74,9 @@ export default async function handler(req, res) {
         durationMs: current?.duration_ms || null,
         progressMs: nowPlaying?.progress_ms || null,
         spotifyUrl: current?.external_urls?.spotify || null,
+        canvasUrl,
       },
 
-      // Only populated when nothing is currently playing — the most
-      // recently played track as a fallback.
       recentlyPlayed: (!nowPlaying?.is_playing && lastPlayed) ? {
         track: lastPlayed.name,
         artist: formatArtists(lastPlayed.artists),
