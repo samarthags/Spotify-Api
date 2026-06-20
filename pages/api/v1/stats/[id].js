@@ -30,7 +30,7 @@ export default async function handler(req, res) {
 
   const record = await getByApiId(id);
 
-  if (!record  !record.isPublic  !record.refreshToken) {
+  if (!record || !record.isPublic || !record.refreshToken) {
     return res.status(404).json({ error: 'Invalid or revoked API ID' });
   }
 
@@ -56,7 +56,6 @@ export default async function handler(req, res) {
     const current = nowPlaying?.item || null;
     const lastPlayed = recentlyPlayed?.items?.[0]?.track || null;
 
-    // Fetch canvas only when a track is actively playing
     let canvasUrl = null;
     if (nowPlaying?.is_playing && current?.uri) {
       canvasUrl = await getCanvasUrl(current.uri, access_token);
