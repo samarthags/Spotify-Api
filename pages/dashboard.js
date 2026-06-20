@@ -51,6 +51,13 @@ function buildSnippet(apiUrl) {
 </script>`;
 }
 
+// ── In-memory dashboard cache ─────────────────────────────────────────────────
+// Prevents hammering /api/data on tab-switch / re-renders while still
+// picking up fresh data every POLL_MS milliseconds.
+const POLL_MS = 90_000; // 90 seconds — was 30 s
+let dashCache = null;
+let dashCacheAt = 0;
+
 export default function Dashboard() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -59,7 +66,14 @@ export default function Dashboard() {
   const [copiedCode, setCopiedCode] = useState(false);
   const router = useRouter();
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (force = false) => {
+    // Return cached data if still fresh and not forcing a refresh
+    if (!force && dashCache && Date.now() - dashCacheAt < POLL_MS) {
+      setData(dashCache);
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await fetch('/api/data');
       if (res.status === 401) {
@@ -68,6 +82,8 @@ export default function Dashboard() {
         return;
       }
       const json = await res.json();
+      dashCache = json;
+      dashCacheAt = Date.now();
       setData(json);
       setAuthed(true);
     } catch (e) {
@@ -79,7 +95,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 30000);
+    const interval = setInterval(() => fetchData(true), POLL_MS);
     return () => clearInterval(interval);
   }, [fetchData]);
 
